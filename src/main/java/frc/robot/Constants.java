@@ -37,13 +37,19 @@ public final class Constants {
     //Drive Motor Ports 
     public static final int kFrontLeftDriveMotorPort = 25;
     public static final int kFrontRightDriveMotorPort = 18;
-    public static final int kRearLeftDriveMotorPort = 23;
-    public static final int kRearRightDriveMotorPort = 21;
+    public static final int kBackLeftDriveMotorPort = 23;
+    public static final int kBackRightDriveMotorPort = 21;
 
     public static final int kFrontLeftTurnMotorPort = 26;
     public static final int kFrontRightTurnMotorPort = 17;
-    public static final int kRearLeftTurnMotorPort = 22;
-    public static final int kRearRightTurnMotorPort = 19;
+    public static final int kBackLeftTurnMotorPort = 22;
+    public static final int kBackRightTurnMotorPort = 19;
+
+    //chassis angular offsets
+    public static final double kFrontLeftChassisAngularOffset = -Math.PI / 2;
+    public static final double kFrontRightChassisAngularOffset = 0;
+    public static final double kBackLeftChassisAngularOffset = Math.PI;
+    public static final double kBackRightChassisAngularOffset = Math.PI / 2;
 
     //kinematics class that generates swerve module states from chassis Speeds
     public static final SwerveDriveKinematics kDriveKinematics =
@@ -57,43 +63,8 @@ public final class Constants {
     public static final double kDriverPeriod = TimedRobot.kDefaultPeriod;
   }
 
-  public static class OperatorConstants {
-    //usb port for drive controller 
-    public static final int kDriverControllerPort = 0;
-
-    //important buttons/axis for driver controller 
-    public static final int kLeftXAxisPort = 0;
-    public static final int kLeftYAxisPort = 1;
-    public static final int kRightXAxisPort = 2;
-
-    public static final int kDriverXButton = 1; 
-    public static final int kDriverAButton = 2; 
-    public static final int kDriverBButton = 3; 
-    public static final int kDriverYButton = 4; 
-    public static final int kDriverLeftShoulder = 5;
-    public static final int kDriverRightShoulder = 6; 
-    public static final int kDriverLeftTrigger = 7; 
-    public static final int kDriverRightTrigger = 8;   
-  }
-
-  public static class ManipulatorConstants {
-    //usb port for manipulator controller
-    public static final int kManipulatorControllerPort = 1;
-
-    //important buttons/axis for manipulator controller
-    public static final int kManipulatorXButton = 1; 
-    public static final int kManipulatorAButton = 2; 
-    public static final int kManipulatorBButton = 3; 
-    public static final int kManiputatorYButton = 4; 
-    public static final int kManipulatorLeftShoulder = 5;
-    public static final int kManipulatorRightShoulder = 6; 
-    public static final int kManipulatorLeftTrigger = 7; 
-    public static final int kManipulatorRightTrigger = 8;  
-  }
-
 
   public static class SwerveModuleConstants {
-    //note: everything commented out has to do with rev pid controllers
     public static final double kWheelDiameterMeters = 0.0762; 
     public static final double kWheelCircumferenceMeters = kWheelDiameterMeters * Math.PI;
     public static final double kDriveMotorReduction = (45.0 * 22) / (13 * 15);
@@ -117,7 +88,7 @@ public final class Constants {
     public static final double kDriveD = 0; 
     public static final double kDriveFF = 1 / kDriveWheelFreeSpeedRps; 
     public static final double kDriveMinOutput = -1; 
-    public static final double kDriveMaxOutout = 1; 
+    public static final double kDriveMaxOutput = 1; 
 
     //gains for turn motor PID (defaults)
     public static final double kTurnP = 1; 
