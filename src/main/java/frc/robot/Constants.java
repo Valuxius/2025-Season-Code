@@ -63,6 +63,39 @@ public final class Constants {
     public static final double kDriverPeriod = TimedRobot.kDefaultPeriod;
   }
 
+  public static class OperatorConstants {
+    //usb port for drive controller 
+    public static final int kDriverControllerPort = 0;
+
+    //important buttons/axis for driver controller 
+    public static final int kLeftXAxisPort = 0;
+    public static final int kLeftYAxisPort = 1;
+    public static final int kRightXAxisPort = 2;
+
+    public static final int kDriverXButton = 1; 
+    public static final int kDriverAButton = 2; 
+    public static final int kDriverBButton = 3; 
+    public static final int kDriverYButton = 4; 
+    public static final int kDriverLeftShoulder = 5;
+    public static final int kDriverRightShoulder = 6; 
+    public static final int kDriverLeftTrigger = 7; 
+    public static final int kDriverRightTrigger = 8;   
+  }
+
+  public static class ManipulatorConstants {
+    //usb port for manipulator controller
+    public static final int kManipulatorControllerPort = 1;
+
+    //important buttons/axis for manipulator controller
+    public static final int kManipulatorXButton = 1; 
+    public static final int kManipulatorAButton = 2; 
+    public static final int kManipulatorBButton = 3; 
+    public static final int kManiputatorYButton = 4; 
+    public static final int kManipulatorLeftShoulder = 5;
+    public static final int kManipulatorRightShoulder = 6; 
+    public static final int kManipulatorLeftTrigger = 7; 
+    public static final int kManipulatorRightTrigger = 8;  
+  }
 
   public static class SwerveModuleConstants {
     public static final double kWheelDiameterMeters = 0.0762; 
@@ -102,33 +135,5 @@ public final class Constants {
     public static final int kDriveCurrentLimit = 40;
     public static final int kTurnCurrentLimit = 20;
 
-  }
-
-  public static class IntakeConstants {
-    //motor ports for intake
-    public static final int kLowIntakeMotorPort = 16; 
-    public static final int kHighIntakeMotorPort = 6; 
-    //current limit for intake motors
-    public static final int kIntakeCurrentLimit = 40; 
-    public static final boolean kHighIntakeInverted = false; 
-  }
-
-  public static class UptakeConstants {
-    //motor ports and current limit for uptake
-    public static final int kUptakeMotorPort = 9;
-    public static final int kUptakeCurrentLimit = 40; 
-  }
-
-  public static class ShooterConstants {
-    //motor ports and current limit for shooter
-    public static final int kLowShooterMotorPort = 10; 
-    public static final int kHighShooterMotorPort = 13;
-    public static final int kShooterMotorCurrentLimit = 40; 
-  }
-  
-  public static class ClimbConstants {
-    //motor port and current limit for climb
-    public static final int kClimbMotorPort = 2; 
-    public static final int kClimbMotorCurrentLimit = 40; 
   }
 }

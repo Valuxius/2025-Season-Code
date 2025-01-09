@@ -1,5 +1,5 @@
 //Following REVLib's 2025 update, configurations to motors and encoders are now done through in a SparkBaseConfig object.
-package frc.robot.subsystems.swerve;
+package frc.robot;
 
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
@@ -20,23 +20,29 @@ public final class SwerveConfigs {
         m_driveConfig
             .idleMode(IdleMode.kBrake)
             .smartCurrentLimit(SwerveModuleConstants.kDriveCurrentLimit);
+
         m_driveConfig.encoder
             .positionConversionFactor(SwerveModuleConstants.kDriveEncoderPositionFactor)
             .velocityConversionFactor(SwerveModuleConstants.kDriveEncoderVelocityFactor);
+
         m_driveConfig.closedLoop
             .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
             .pid(SwerveModuleConstants.kDriveP, SwerveModuleConstants.kDriveI, SwerveModuleConstants.kDriveD)
             .velocityFF(SwerveModuleConstants.kDriveFF)
             .outputRange(SwerveModuleConstants.kDriveMinOutput, SwerveModuleConstants.kDriveMaxOutput);
+
         m_driveConfig.closedLoop.maxMotion
             .positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal);
+            
         m_turnConfig
             .idleMode(IdleMode.kCoast)
             .smartCurrentLimit(SwerveModuleConstants.kTurnCurrentLimit);
+
         m_turnConfig.absoluteEncoder
             .inverted(true)
             .positionConversionFactor(SwerveModuleConstants.kTurnEncoderPositionFactor)
             .velocityConversionFactor(SwerveModuleConstants.kTurnEncoderVelocityFactor);
+            
         m_turnConfig.closedLoop
             .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
             .pid(SwerveModuleConstants.kTurnP, SwerveModuleConstants.kTurnI, SwerveModuleConstants.kTurnD)

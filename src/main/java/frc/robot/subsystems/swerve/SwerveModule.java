@@ -12,6 +12,7 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import frc.robot.SwerveConfigs;
 
 
 public class SwerveModule {
