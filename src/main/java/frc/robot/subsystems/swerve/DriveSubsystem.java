@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants;
 
@@ -45,7 +46,7 @@ public class DriveSubsystem extends SubsystemBase {
     DriveConstants.kBackRightTurnMotorPort, 
     DriveConstants.kBackRightChassisAngularOffset);
 
-  //initialize the gryo
+  //initialize the gyro
   public final ADXRS450_Gyro m_gyro = new ADXRS450_Gyro();
 
   //storing the positions of the swerve modules
@@ -73,10 +74,11 @@ public class DriveSubsystem extends SubsystemBase {
       this::getPose,
       (pose) -> {
         resetPose(pose);
-        m_poseEstimator.resetPosition(m_gryo.getRotation2d(), getPositions(), pose);},
+        m_poseEstimator.resetPosition(m_gryo.getRotation2d(), getPositions(), pose);
+      },
       this::getCurrentSpeeds,
       this::autoDrive,
-      new HolonomicPathFollowerConfig(
+      new PathFollowerConfig(
           
       )
     );*/
@@ -97,16 +99,32 @@ public class DriveSubsystem extends SubsystemBase {
     double rotDelivered = rot * DriveConstants.kMaxAngularSpeed;
 
     var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
-      fieldRelative ?
+      ChassisSpeeds.discretize(fieldRelative ?
         ChassisSpeeds.fromFieldRelativeSpeeds( //converts field relative input into chassis speeds
           xSpeedDelivered, 
           ySpeedDelivered, 
           rotDelivered, 
-          Rotation2d.fromDegrees(m_gyro.getAngle()))
-        : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered)); //uses raw controller input as chassis speeds
+          m_gyro.getRotation2d())
+        : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered), //uses raw controller input as chassis speeds
+      DriveConstants.kDriverPeriod)); 
 
+    // caps the wheel speeds so they don't go faster then they should
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
     
+    //sets the desired states of the swerve modules
+    m_frontLeft.setDesiredState(swerveModuleStates[0]);
+    m_frontRight.setDesiredState(swerveModuleStates[1]);
+    m_backLeft.setDesiredState(swerveModuleStates[2]);
+    m_backRight.setDesiredState(swerveModuleStates[3]);
+  }
+
+  public void autoDrive(ChassisSpeeds speeds) {
+    var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
+      ChassisSpeeds.discretize(
+        speeds, DriveConstants.kDriverPeriod));
+
+    SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
+
     m_frontLeft.setDesiredState(swerveModuleStates[0]);
     m_frontRight.setDesiredState(swerveModuleStates[1]);
     m_backLeft.setDesiredState(swerveModuleStates[2]);
@@ -201,4 +219,9 @@ public class DriveSubsystem extends SubsystemBase {
       }
     );
   }
+
+public void setDefaultCommand(RunCommand runCommand) {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'setDefaultCommand'");
+}
 }
