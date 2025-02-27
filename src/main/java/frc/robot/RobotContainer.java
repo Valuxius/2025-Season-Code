@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.ManipulatorConstants;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.swerve.DriveSubsystem;
+import frc.robot.utils.LimelightHelpers;
 
 public class RobotContainer {
   //creating the subsystems
@@ -35,25 +36,18 @@ public class RobotContainer {
     DriveConstants.kRightElevatorMotorPort);
   */
 
-  //creating the controllers
-  Joystick m_driverController = new Joystick(OperatorConstants.kDriverControllerPort);
-  Joystick m_manipulatorController = new Joystick(ManipulatorConstants.kManipulatorControllerPort);
+  //creating the controllers, allows our controllers to be detected by our programming
+  Joystick m_driverController = new Joystick(OperatorConstants.kDriverControllerPort); //kDriverControllerPort is the port on which the driver controller is connected to
+  Joystick m_manipulatorController = new Joystick(ManipulatorConstants.kManipulatorControllerPort); //kManipulatorControllerPort is the port on which the manipulator controller is connected to
 
-  //dropdown menu for autos
+  //initializes dropdown menu for autos, will be sent to Shuffleboard/Smart Dashboard
   private final SendableChooser<Command> autoChooser;
 
   public RobotContainer() {
-    NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight_front");
+    //fetches the "tx" value from the back limelight
+    double tx = LimelightHelpers.getTX("limelight_back");
 
-    NetworkTableEntry tx = table.getEntry("tx");
-    NetworkTableEntry ty = table.getEntry("ty");
-    NetworkTableEntry ta = table.getEntry("ta");
-
-    Supplier<Double> x = () -> tx.getDouble(0.0);
-    Supplier<Double> y = () -> ty.getDouble(0.0);
-    Supplier<Double> area = () -> ta.getDouble(0.0);
-
-    //registers the reset gyro command in PathPlanner
+    //registers commands to be used in PathPlanner, allowing us to use these commands during auto
     NamedCommands.registerCommand("Reset Gyro", new InstantCommand(() -> m_drive.resetGyro(), m_drive));
     NamedCommands.registerCommand("Rumble On", new InstantCommand(() -> m_driverController.setRumble(RumbleType.kBothRumble, 1)));
     NamedCommands.registerCommand("Rumble Off", new InstantCommand(() -> m_driverController.setRumble(RumbleType.kBothRumble, 0)));
@@ -76,11 +70,11 @@ public class RobotContainer {
 
             //squared(-MathUtil.applyDeadband(m_driverController.getRawAxis(OperatorConstants.kRightXAxisPort),.05))
 
-    //Publishes data on SmartDashboard
+    //Publishes data on SmartDashboard/Shuffleboard
     SmartDashboard.putData("Auto Chooser", autoChooser);
     SmartDashboard.putData(m_drive.m_gyro);
     SmartDashboard.putData(m_drive.m_field);
-    SmartDashboard.putNumber("x", x.get());
+    SmartDashboard.putNumber("x", tx);
   }
 
   /**

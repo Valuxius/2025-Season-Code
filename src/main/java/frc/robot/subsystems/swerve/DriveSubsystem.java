@@ -80,19 +80,26 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     //supplies methods for pathplanner to use for position estimation and auto
-    AutoBuilder.configure( 
-      this::getPose, //get position method
+    AutoBuilder.configure(
+      //get position method
+      this::getPose,
+      //the next 4 lines are a method for the pathplanner to reset position estimate
       (pose) -> {
         resetPose(pose);
         m_poseEstimator.resetPosition(m_gyro.getRotation2d(), getPositions(), pose);
       },
+      //method that returns current speeds
       this::getCurrentSpeeds,
+      //method for pathplanner to drive with parameters "speeds" and "feedforwards"
       (speeds, feedforwards) -> autoDrive(speeds),
+      //creates drive and turn PID for auto with constants 5, 0, 0
       new PPHolonomicDriveController(
         new PIDConstants(5.0, 0.0, 0.0),
         new PIDConstants(5.0, 0.0, 0.0)
       ),
+      //applies robot configuration given from settings in pathplanner
       robotConfig,
+      //method to determine whether to flip auto path or not
       () -> {
         var alliance = DriverStation.getAlliance();
         if (alliance.isPresent()) {
@@ -100,6 +107,7 @@ public class DriveSubsystem extends SubsystemBase {
         }
         return false;
       },
+      //subsystem to be used (drive subsystem)
       this
     );
   }
@@ -118,8 +126,9 @@ public class DriveSubsystem extends SubsystemBase {
     double ySpeedDelivered = ySpeed * DriveConstants.kMaxSpeedMetersPerSecond;
     double rotDelivered = rot * DriveConstants.kMaxAngularSpeed;
 
+    //creates an array of states to be applied to all 4 swerve modules
     var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
-      ChassisSpeeds.discretize(fieldRelative ?
+      ChassisSpeeds.discretize(fieldRelative ? //if field relative is true, convert controller input to chassis speeds, otherwise use raw controller input as chassis speeds
         ChassisSpeeds.fromFieldRelativeSpeeds( //converts field relative input into chassis speeds
           xSpeedDelivered, 
           ySpeedDelivered, 
@@ -128,24 +137,27 @@ public class DriveSubsystem extends SubsystemBase {
         : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered), //uses raw controller input as chassis speeds
       DriveConstants.kDriverPeriod)); 
 
-    // caps the wheel speeds so they don't go faster then they should
+    //caps the wheel speeds so they don't go faster than they should
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
     
     //sets the desired states of the swerve modules
-    
     m_frontLeft.setDesiredState(swerveModuleStates[0]);
     m_frontRight.setDesiredState(swerveModuleStates[1]);
     m_backLeft.setDesiredState(swerveModuleStates[2]);
     m_backRight.setDesiredState(swerveModuleStates[3]);
   }
 
+  //method to drive during auto
   public void autoDrive(ChassisSpeeds speeds) {
+    //creates an array of states to be applied to all 4 swerve moduless
     var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
       ChassisSpeeds.discretize(
         speeds, DriveConstants.kDriverPeriod));
 
+    //caps the wheel speeds so they don't go faster than they should
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
 
+    //sets the desired states of the swerve modules
     m_frontLeft.setDesiredState(swerveModuleStates[0]);
     m_frontRight.setDesiredState(swerveModuleStates[1]);
     m_backLeft.setDesiredState(swerveModuleStates[2]);

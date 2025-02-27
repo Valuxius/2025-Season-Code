@@ -14,7 +14,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
  * constants. This class should not be used for any other purpose. All constants should be declared
  * globally (i.e. public static). Do not put anything functional in this class.
  *
- * <p>It is advised to statically import this class (or one of its inner classes) wherever the
+ * It is advised to statically import this class (or one of its inner classes) wherever the
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
@@ -25,6 +25,7 @@ public final class Constants {
     public static final double kMaxAngularAcceleration = 2 * Math.PI; // radians per second per second
 
     //shift in motors to temporarily test robot without having to recalibrate
+    //set to 0 after calibration
     public static final double kFrontLeftOffset = 0;
     public static final double kBackLeftOffset = 0;
     public static final double kFrontRightOffset = 0;
@@ -55,10 +56,10 @@ public final class Constants {
     public static final int kLeftElevatorMotorPort = 9;
     public static final int kRightElevatorMotorPort = 10;
 
-    //elevator max speed
+    //elevator max speed (max 1)
     public static final double kElevatorMaxSpeed = 0.2;
 
-    //chassis angular offsets
+    //angle offsets for each motor (in radians)
     public static final double kFrontLeftChassisAngularOffset = -Math.PI / 2 + Units.degreesToRadians(kFrontLeftOffset);
     public static final double kFrontRightChassisAngularOffset = 0;
     public static final double kBackLeftChassisAngularOffset = Math.PI;
@@ -72,7 +73,7 @@ public final class Constants {
       new Translation2d(-kTrackLength / 2, kTrackWidth / 2), //rear left
       new Translation2d(-kTrackLength / 2, -kTrackWidth / 2)); //rear right
 
-    //robot clock cycle
+    //robot clock cycle 
     public static final double kDriverPeriod = TimedRobot.kDefaultPeriod;
   }
 
@@ -85,14 +86,15 @@ public final class Constants {
     public static final int kLeftYAxisPort = 1;
     public static final int kRightXAxisPort = 4;
 
+    public static final int kDriverLeftTriggerAxis = 2; 
+    public static final int kDriverRightTriggerAxis = 3;   
+
     public static final int kDriverXButton = 3; 
     public static final int kDriverAButton = 1; 
     public static final int kDriverBButton = 2; 
     public static final int kDriverYButton = 4; 
     public static final int kDriverLeftShoulder = 5;
     public static final int kDriverRightShoulder = 6; 
-    public static final int kDriverLeftTriggerAxis = 2; 
-    public static final int kDriverRightTriggerAxis = 3;   
   }
 
   public static class ManipulatorConstants {
@@ -100,33 +102,33 @@ public final class Constants {
     public static final int kManipulatorControllerPort = 1;
 
     //important buttons/axis for manipulator controller
+    public static final int kManipulatorLeftTriggerAxis = 2; 
+    public static final int kManipulatorRightTriggerAxis = 3; 
+
     public static final int kManipulatorXButton = 3; 
     public static final int kManipulatorAButton = 1; 
     public static final int kManipulatorBButton = 2; 
     public static final int kManipulatorYButton = 4; 
     public static final int kManipulatorLeftShoulder = 5;
     public static final int kManipulatorRightShoulder = 6; 
-    public static final int kManipulatorLeftTriggerAxis = 2; 
-    public static final int kManipulatorRightTriggerAxis = 3;  
+   
   }
 
   public static class SwerveModuleConstants {
-    public static final double kWheelDiameterMeters = 0.0762; 
-    public static final double kWheelCircumferenceMeters = kWheelDiameterMeters * Math.PI;
-    public static final double kDriveMotorReduction = (45.0 * 22) / (13 * 15);
-    public static final double kDriveMotorFreeSpeedRps = 5676 / 60;
-    public static final double kDriveWheelFreeSpeedRps = (kDriveMotorFreeSpeedRps * kWheelCircumferenceMeters) / kDriveMotorReduction;
+    public static final double kWheelDiameterMeters = 0.0762; //diameter of the wheels in meters
+    public static final double kWheelCircumferenceMeters = kWheelDiameterMeters * Math.PI; //0.239, circumference of the wheels in meters
+    public static final double kDriveMotorReduction = (45.0 * 22) / (13 * 15); //5.079, factor for how much slower wheel is compared to motor
+    public static final double kDriveMotorFreeSpeedRps = 5676 / 60; //94.0, max rotations per second for drive motor
+    public static final double kDriveWheelFreeSpeedRps = (kDriveMotorFreeSpeedRps * kWheelCircumferenceMeters) / kDriveMotorReduction; //4.43, max speed for drive wheel
     public static final double kDriveEncoderPositionFactor = kWheelCircumferenceMeters / kDriveMotorReduction; // meters
     public static final double kDriveEncoderVelocityFactor = (kWheelCircumferenceMeters / kDriveMotorReduction) / 60.0; // meters per second
 
     public static final double kTurnEncoderPositionFactor = 2 * Math.PI; //radians 
     public static final double kTurnEncoderVelocityFactor = (2 * Math.PI) / 60.0; // radians per second
 
-    public static final boolean kTurnEncoderInverted = true;
-    public static final boolean kTurnEncoderWrapping = true;
 
-    public static final double kTurnEncoderPositionPIDMinInput = 0; 
-    public static final double kTurnEncoderPositionPIDMaxInput = 2 * Math.PI; 
+    public static final double kTurnEncoderPositionPIDMinInput = 0; //min input for turn encoder
+    public static final double kTurnEncoderPositionPIDMaxInput = 2 * Math.PI; //max input for turn encoder
 
     //gains for drive motor PID (defaults)
     public static final double kDriveP = .03; 

@@ -1,5 +1,8 @@
 //LimelightHelpers v1.11 (REQUIRES LLOS 2025.0 OR LATER)
 
+//Limelight class
+//We most likely do not need to do anything with this class although it is helpful to know which methods are present in this class - Jackie
+
 package frc.robot.utils;
 
 import java.io.IOException;
