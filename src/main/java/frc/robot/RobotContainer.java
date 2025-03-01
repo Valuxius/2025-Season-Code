@@ -23,19 +23,22 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.ManipulatorConstants;
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.subsystems.ClimbSubsystem;
+import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.swerve.DriveSubsystem;
 import frc.robot.utils.LimelightHelpers;
 
 public class RobotContainer {
   //creating the subsystems
   private final DriveSubsystem m_drive = new DriveSubsystem();
-  /*private final ElevatorSubsystem m_elevator = new ElevatorSubsystem(
+  private final ElevatorSubsystem m_elevator = new ElevatorSubsystem(
     DriveConstants.kLeftElevatorMotorPort, 
     DriveConstants.kRightElevatorMotorPort);
-  */
 
+  private final ClimbSubsystem m_climb = new ClimbSubsystem(DriveConstants.kClimbMotorPort);
   //creating the controllers, allows our controllers to be detected by our programming
   Joystick m_driverController = new Joystick(OperatorConstants.kDriverControllerPort); //kDriverControllerPort is the port on which the driver controller is connected to
   Joystick m_manipulatorController = new Joystick(ManipulatorConstants.kManipulatorControllerPort); //kManipulatorControllerPort is the port on which the manipulator controller is connected to
@@ -118,10 +121,18 @@ public class RobotContainer {
       m_manipulatorController, 
       ManipulatorConstants.kManipulatorYButton
     );
+    Trigger manipulatorAButton = new JoystickButton(
+      m_manipulatorController,
+      ManipulatorConstants.kManipulatorAButton
+    );
 
     //binding buttons to controls  
     driverBButton.onTrue(m_drive.resetGyro()); //reset gyro button
     driverAButton.whileTrue(new RunCommand(() -> m_drive.setX(), m_drive)); //handbrake button
+    manipulatorAButton.whileTrue(new RunCommand(() -> m_climb.rotate(-0.10), m_climb));
+    manipulatorAButton.onFalse(new InstantCommand(() -> m_climb.rotate(0)));
+    manipulatorYButton.whileTrue(new RunCommand(() -> m_climb.rotate(0.10), m_climb));
+    manipulatorYButton.onFalse(new InstantCommand(() -> m_climb.rotate(0)));
 
     /*driverLeftTrigger.whileTrue(new RunCommand(
       () -> m_elevator.ascend(DriveConstants.kElevatorMaxSpeed))); //move elevator up

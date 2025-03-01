@@ -42,19 +42,26 @@ public final class Constants {
     public static final double kTrackLength = Units.inchesToMeters(24.5);
 
     //drive motor ports 
-    public static final int kFrontLeftDriveMotorPort = 25;
-    public static final int kFrontRightDriveMotorPort = 18;
-    public static final int kBackLeftDriveMotorPort = 23;
-    public static final int kBackRightDriveMotorPort = 21;
+    public static final int kFrontLeftDriveMotorPort = 1;
+    public static final int kFrontRightDriveMotorPort = 3;
+    public static final int kBackLeftDriveMotorPort = 5;
+    public static final int kBackRightDriveMotorPort = 7;
 
-    public static final int kFrontLeftTurnMotorPort = 26;
-    public static final int kFrontRightTurnMotorPort = 17;
-    public static final int kBackLeftTurnMotorPort = 22;
-    public static final int kBackRightTurnMotorPort = 19;
+    public static final int kFrontLeftTurnMotorPort = 2;
+    public static final int kFrontRightTurnMotorPort = 4;
+    public static final int kBackLeftTurnMotorPort = 6;
+    public static final int kBackRightTurnMotorPort = 8;
 
     //elevator motor ports
-    public static final int kLeftElevatorMotorPort = 9;
-    public static final int kRightElevatorMotorPort = 10;
+    public static final int kLeftElevatorMotorPort =13;
+    public static final int kRightElevatorMotorPort = 12;
+
+    //shooter motor ports
+    public static final int kShooterMotorPort = 10;
+    public static final int kRotationMotorPort = 9;
+  
+    //climb motor port
+    public static final int kClimbMotorPort = 11;
 
     //elevator max speed (max 1)
     public static final double kElevatorMaxSpeed = 0.2;

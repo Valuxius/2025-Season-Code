@@ -45,8 +45,8 @@ public class ElevatorSubsystem extends SubsystemBase {
    * @param speed Speed of ascent, 0 - 1
    */
   public void ascend(double speed) {
-    m_lMotor.set(speed);
-    m_rMotor.set(-speed);
+    m_lMotor.set(-speed);
+    m_rMotor.set(speed);
   }
 
   /**
@@ -55,8 +55,8 @@ public class ElevatorSubsystem extends SubsystemBase {
    * @param speed Speed of descent, 0 - 1
    */
   public void descend(double speed) {
-    m_lMotor.set(-speed);
-    m_rMotor.set(speed);
+    m_lMotor.set(speed);
+    m_rMotor.set(-speed);
   }
 
   @Override

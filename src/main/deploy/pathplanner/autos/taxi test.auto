@@ -9,36 +9,6 @@
           "data": {
             "name": "Reset Gyro"
           }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "test"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "test"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "test"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "test"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "test"
-          }
         }
       ]
     }
