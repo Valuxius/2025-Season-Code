@@ -43,9 +43,11 @@ public class ShooterSubsystem extends SubsystemBase {
     m_shooterPID = m_shooterMotor.getClosedLoopController(); //disabled
     m_rotationPID = m_rotationMotor.getClosedLoopController();
 
+    //resets the encoder
     m_shooterEncoder.setPosition(0);
     m_rotationEncoder.setPosition(0);
 
+    //configures the PIDs for the motors
     m_shooterMotor.configure(MotorConfigs.m_shooterConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     m_rotationMotor.configure(MotorConfigs.m_elevatorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
@@ -77,11 +79,14 @@ public class ShooterSubsystem extends SubsystemBase {
     m_rotationMotor.set(speed);
   }
 
+  // This method will be called once per scheduler run
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
+    //sets the encoder reference for the PID
     //m_rotationPID.setReference(m_rotationEncoder.getPosition(), ControlType.kPosition);
     //m_shooterPID.setReference(m_shooterEncoder.getPosition(), ControlType.kPosition);
+
+    //puts data on SmartDashboard for troubleshooting
     SmartDashboard.putNumber("Encoder 2", m_rotationEncoder.getVelocity());
   }
 }

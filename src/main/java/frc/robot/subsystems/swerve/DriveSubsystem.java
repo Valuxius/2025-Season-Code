@@ -260,18 +260,23 @@ public class DriveSubsystem extends SubsystemBase {
       getPositions()
     );
     
+    //boolean variable for whether limelight data is accurate or not. if data is inaccurate, rejects limelight pose update
     boolean doRejectUpdate = false;
 
-    LimelightHelpers.SetRobotOrientation("limelight_front", m_poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
+    //sets orientation values for megatag pose estimation
+    LimelightHelpers.SetRobotOrientation("limelight-front", m_poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
+    
+    //creates pose estimate
     LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight_front");
+
     if (mt2 != null) { 
-      if (Math.abs(m_gyro.getRate()) > 720) {
+      if (Math.abs(m_gyro.getRate()) > 720) { //determines if gyro is unreliable
         doRejectUpdate = true;
       }
-      if (mt2.tagCount == 0) {
+      if (mt2.tagCount == 0) { //determines if an AprilTag is detected
         doRejectUpdate = true;
       }
-      if(!doRejectUpdate) {
+      if(!doRejectUpdate) { //if neither of the conditions above were met, update pose estimator
           m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7,.7,9999999));
           m_poseEstimator.addVisionMeasurement(
               mt2.pose,

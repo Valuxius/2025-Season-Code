@@ -30,8 +30,9 @@ public class ElevatorSubsystem extends SubsystemBase {
   private final SparkClosedLoopController m_lPID;
   private final SparkClosedLoopController m_rPID;
 
+  //variables for the presets
   private int stage = 0;
-  private boolean stageLock = false;
+  private boolean stageLock = false; //will toggle to false when needed, locks the elevator at preset if set to true
 
   /** Creates a new ElevatorSubsystem. */
   public ElevatorSubsystem(int p_leftID, int p_rightID) {
@@ -51,6 +52,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     m_lEncoder.setPosition(0);
     m_rEncoder.setPosition(0);
 
+    //configures the motors with PID controls
     m_lMotor.configure(MotorConfigs.m_elevatorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     m_rMotor.configure(MotorConfigs.m_elevatorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
@@ -61,13 +63,21 @@ public class ElevatorSubsystem extends SubsystemBase {
    * @param speed Speed of ascent, 0 - 1
    */
   public void ascend(double speed) {
-    stageLock = false;
-    double newSpeed = speed;
-    if (m_lEncoder.getPosition() > 40) {
-      newSpeed = Math.abs((((speed)/5)*(m_lEncoder.getPosition() - 45)));
+    stageLock = false; //set to false to allow free moving
+    double newSpeed = speed; //creates new variable for adjusted speed
+
+    //reduces speed near the top as a "stop"
+    if (m_lEncoder.getPosition() > 40) { //starts reducing speed after encoder position reaches 40
+      newSpeed = Math.abs( //absolute value
+        (((speed)/5)*(m_lEncoder.getPosition() - 45)) //linearly decreases speed to 0 at position 45
+      ); 
     }
-    m_lMotor.set(speed);
-    m_rMotor.set(-speed);
+
+    //sets the motor speeds
+    m_lMotor.set(newSpeed);
+    m_rMotor.set(-newSpeed);
+
+    //posts the data to SmartDashboard (for troubleshooting)
     SmartDashboard.putNumber("Speed", newSpeed);
   }
 
@@ -77,26 +87,36 @@ public class ElevatorSubsystem extends SubsystemBase {
    * @param speed Speed of descent, 0 - 1
    */
   public void descend(double speed) {
-    stageLock = false;
-    double newSpeed = speed;
-    if (m_lEncoder.getPosition() < 1) {
+    stageLock = false; //set to false to allow free moving
+    double newSpeed = speed; //creates new variable for adjusted speed
+
+    //reduces speed near the bottom as a "stop"
+    if (m_lEncoder.getPosition() < 1) { //minimum speed at position 1
       newSpeed = 0.1;
-    } else if (m_lEncoder.getPosition() < 5) {
-      newSpeed = 0.1 + (((speed-0.1)/4)*(m_lEncoder.getPosition() - 1));
+    } else if (m_lEncoder.getPosition() < 5) { //starts reducing speed at position 5
+      newSpeed = 0.1 + //minimum speed
+      (((speed-0.1)/4)*(m_lEncoder.getPosition() - 1)); //linearly decreases speed to 0.1 at position 1 (5 - 4)
     }
+
+    //sets motor speeds
     m_lMotor.set(-newSpeed);
     m_rMotor.set(newSpeed);
+
+    //puts data on SmartDashboard for troubleshoooting
     SmartDashboard.putNumber("Speed", newSpeed);
   }
 
+  // This method will be called once per scheduler run
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
+    //sets the PID references to the encoder position
     m_lPID.setReference(m_lEncoder.getPosition(), ControlType.kPosition);
     m_rPID.setReference(m_rEncoder.getPosition(), ControlType.kPosition);
+    
+    //puts encoder position on SmartDashboard for troubleshooting
     SmartDashboard.putNumber("Elevator Encoder", m_lEncoder.getPosition());
     if (stageLock) {
-      
+
     }
   }
 }
