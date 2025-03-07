@@ -25,30 +25,30 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.RobotConstants;
 import frc.robot.utils.LimelightHelpers;
 
 public class DriveSubsystem extends SubsystemBase {
   //configuring the swerve modules
   private final SwerveModule m_frontLeft = new SwerveModule(
-    DriveConstants.kFrontLeftDriveMotorPort, 
-    DriveConstants.kFrontLeftTurnMotorPort, 
-    DriveConstants.kFrontLeftChassisAngularOffset);
+    RobotConstants.kFrontLeftDriveMotorPort, 
+    RobotConstants.kFrontLeftTurnMotorPort, 
+    RobotConstants.kFrontLeftChassisAngularOffset);
 
   private final SwerveModule m_frontRight = new SwerveModule(
-    DriveConstants.kFrontRightDriveMotorPort, 
-    DriveConstants.kFrontRightTurnMotorPort, 
-    DriveConstants.kFrontRightChassisAngularOffset);
+    RobotConstants.kFrontRightDriveMotorPort, 
+    RobotConstants.kFrontRightTurnMotorPort, 
+    RobotConstants.kFrontRightChassisAngularOffset);
 
   private final SwerveModule m_backLeft = new SwerveModule(
-    DriveConstants.kBackLeftDriveMotorPort, 
-    DriveConstants.kBackLeftTurnMotorPort, 
-    DriveConstants.kBackLeftChassisAngularOffset);
+    RobotConstants.kBackLeftDriveMotorPort, 
+    RobotConstants.kBackLeftTurnMotorPort, 
+    RobotConstants.kBackLeftChassisAngularOffset);
 
   private final SwerveModule m_backRight = new SwerveModule(
-    DriveConstants.kBackRightDriveMotorPort, 
-    DriveConstants.kBackRightTurnMotorPort, 
-    DriveConstants.kBackRightChassisAngularOffset);
+    RobotConstants.kBackRightDriveMotorPort, 
+    RobotConstants.kBackRightTurnMotorPort, 
+    RobotConstants.kBackRightChassisAngularOffset);
 
   //initialize the gyro
   public final ADXRS450_Gyro m_gyro = new ADXRS450_Gyro();
@@ -57,12 +57,12 @@ public class DriveSubsystem extends SubsystemBase {
   private final SwerveModulePosition[] m_swervePositions = getPositions();
 
   //odometry object to track the robots pose on the field
-  private final SwerveDriveOdometry m_driveOdometry = new SwerveDriveOdometry(DriveConstants.kDriveKinematics, m_gyro.getRotation2d(), m_swervePositions);
+  private final SwerveDriveOdometry m_driveOdometry = new SwerveDriveOdometry(RobotConstants.kDriveKinematics, m_gyro.getRotation2d(), m_swervePositions);
 
   //poseEstimator object which tracks the robots pose on the field (similar to odometry object but can use vision data for more accurate tracking)
   private final SwerveDrivePoseEstimator m_poseEstimator =
     new SwerveDrivePoseEstimator(
-        DriveConstants.kDriveKinematics,
+      RobotConstants.kDriveKinematics,
         m_gyro.getRotation2d(),
         getPositions(),
         new Pose2d(), //below - 1x3 matrix of the form (x,y,theta) in meters and radians
@@ -124,12 +124,12 @@ public class DriveSubsystem extends SubsystemBase {
    */
   public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative) {
     // Convert the controller input into units for the drive train
-    double xSpeedDelivered = xSpeed * DriveConstants.kMaxSpeedMetersPerSecond;
-    double ySpeedDelivered = ySpeed * DriveConstants.kMaxSpeedMetersPerSecond;
-    double rotDelivered = rot * DriveConstants.kMaxAngularSpeed;
+    double xSpeedDelivered = xSpeed * RobotConstants.kMaxSpeedMetersPerSecond;
+    double ySpeedDelivered = ySpeed * RobotConstants.kMaxSpeedMetersPerSecond;
+    double rotDelivered = rot * RobotConstants.kMaxAngularSpeed;
 
     //creates an array of states to be applied to all 4 swerve modules
-    var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
+    var swerveModuleStates = RobotConstants.kDriveKinematics.toSwerveModuleStates(
       ChassisSpeeds.discretize(fieldRelative ? //if field relative is true, convert controller input to chassis speeds, otherwise use raw controller input as chassis speeds
         ChassisSpeeds.fromFieldRelativeSpeeds( //converts field relative input into chassis speeds
           xSpeedDelivered, 
@@ -137,10 +137,10 @@ public class DriveSubsystem extends SubsystemBase {
           rotDelivered, 
           m_gyro.getRotation2d())
         : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered), //uses raw controller input as chassis speeds
-      DriveConstants.kDriverPeriod)); 
+        RobotConstants.kDriverPeriod)); 
 
     //caps the wheel speeds so they don't go faster than they should
-    SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
+    SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, RobotConstants.kMaxSpeedMetersPerSecond);
     
     //sets the desired states of the swerve modules
     m_frontLeft.setDesiredState(swerveModuleStates[0]);
@@ -152,12 +152,12 @@ public class DriveSubsystem extends SubsystemBase {
   //method to drive during auto
   public void autoDrive(ChassisSpeeds speeds) {
     //creates an array of states to be applied to all 4 swerve moduless
-    var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
+    var swerveModuleStates = RobotConstants.kDriveKinematics.toSwerveModuleStates(
       ChassisSpeeds.discretize(
-        speeds, DriveConstants.kDriverPeriod));
+        speeds, RobotConstants.kDriverPeriod));
 
     //caps the wheel speeds so they don't go faster than they should
-    SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
+    SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, RobotConstants.kMaxSpeedMetersPerSecond);
 
     //sets the desired states of the swerve modules
     m_frontLeft.setDesiredState(swerveModuleStates[0]);
@@ -238,7 +238,7 @@ public class DriveSubsystem extends SubsystemBase {
    * @return Speed of the robot
    */
   public ChassisSpeeds getCurrentSpeeds() {
-    return DriveConstants.kDriveKinematics.toChassisSpeeds(getStates());
+    return RobotConstants.kDriveKinematics.toChassisSpeeds(getStates());
   }
 
   public Command resetGyro() {
@@ -259,25 +259,24 @@ public class DriveSubsystem extends SubsystemBase {
       m_gyro.getRotation2d(), 
       getPositions()
     );
-    /*
+    
     boolean doRejectUpdate = false;
 
     LimelightHelpers.SetRobotOrientation("limelight_front", m_poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
     LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight_front");
-    if (Math.abs(m_gyro.getRate()) > 720) {
-      doRejectUpdate = true;
-    }
-    if (mt2.tagCount == 0) {
-      doRejectUpdate = true;
-    }
-    if(!doRejectUpdate)
-      {
-        m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7,.7,9999999));
-        m_poseEstimator.addVisionMeasurement(
-            mt2.pose,
-            mt2.timestampSeconds);
+    if (mt2 != null) { 
+      if (Math.abs(m_gyro.getRate()) > 720) {
+        doRejectUpdate = true;
       }
-            */
+      if (mt2.tagCount == 0) {
+        doRejectUpdate = true;
+      }
+      if(!doRejectUpdate) {
+          m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7,.7,9999999));
+          m_poseEstimator.addVisionMeasurement(
+              mt2.pose,
+              mt2.timestampSeconds);
+      }    
+    }
   }
-
 }

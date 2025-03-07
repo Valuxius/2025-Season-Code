@@ -12,8 +12,7 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import frc.robot.SwerveConfigs;
-
+import frc.robot.MotorConfigs;
 
 public class SwerveModule {
     //initializing the motors
@@ -49,9 +48,9 @@ public class SwerveModule {
         m_driveEncoder.setPosition(0);
         m_desiredState.angle = new Rotation2d(m_turnEncoder.getPosition());
 
-        //configure the swerve module with the settings defined in Configs.java
-        m_driveMotor.configure(SwerveConfigs.m_driveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-        m_turnMotor.configure(SwerveConfigs.m_turnConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        //configure the swerve module with the settings defined in MotorConfigs.java
+        m_driveMotor.configure(MotorConfigs.m_driveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        m_turnMotor.configure(MotorConfigs.m_turnConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     /**

@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -15,6 +16,9 @@ public class Robot extends TimedRobot {
 
   public Robot() {
     m_robotContainer = new RobotContainer(); //creates the robot container
+    /*for (int port = 5800; port <= 5809; port++) { //port forwards limelight ports to be able to be accessed through usb
+      PortForwarder.add(port, "limelight-front.local", port);
+    }*/
   }
 
   //runs periodically while the robot is active

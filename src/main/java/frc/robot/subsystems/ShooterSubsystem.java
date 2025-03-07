@@ -7,9 +7,14 @@ package frc.robot.subsystems;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.MotorConfigs;
 
 public class ShooterSubsystem extends SubsystemBase {
   //initializing the motors
@@ -20,7 +25,7 @@ public class ShooterSubsystem extends SubsystemBase {
   private final RelativeEncoder m_shooterEncoder;
   private final RelativeEncoder m_rotationEncoder;
 
-  //initalizing the PID controllers (disabled for now)
+  //initalizing the PID controllers 
   private final SparkClosedLoopController m_shooterPID;
   private final SparkClosedLoopController m_rotationPID;
 
@@ -34,9 +39,15 @@ public class ShooterSubsystem extends SubsystemBase {
     m_shooterEncoder = m_shooterMotor.getEncoder();
     m_rotationEncoder = m_rotationMotor.getEncoder();
 
-    //creating the PID controllers (disabled for now)
-    m_shooterPID = m_shooterMotor.getClosedLoopController();
+    //creating the PID controllers
+    m_shooterPID = m_shooterMotor.getClosedLoopController(); //disabled
     m_rotationPID = m_rotationMotor.getClosedLoopController();
+
+    m_shooterEncoder.setPosition(0);
+    m_rotationEncoder.setPosition(0);
+
+    m_shooterMotor.configure(MotorConfigs.m_shooterConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    m_rotationMotor.configure(MotorConfigs.m_elevatorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
   /**
@@ -69,5 +80,8 @@ public class ShooterSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    //m_rotationPID.setReference(m_rotationEncoder.getPosition(), ControlType.kPosition);
+    //m_shooterPID.setReference(m_shooterEncoder.getPosition(), ControlType.kPosition);
+    SmartDashboard.putNumber("Encoder 2", m_rotationEncoder.getVelocity());
   }
 }

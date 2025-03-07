@@ -18,7 +18,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-  public static class DriveConstants { 
+  public static class RobotConstants { 
     public static final double kMaxSpeedMetersPerSecond = 1.8; //4.3 
     public static final double kMaxAccelerationMetersPerSecond = 4.3; //theoretical max
     public static final double kMaxAngularSpeed = 2 * Math.PI; //radians per sec 
@@ -42,18 +42,18 @@ public final class Constants {
     public static final double kTrackLength = Units.inchesToMeters(24.5);
 
     //drive motor ports 
-    public static final int kFrontLeftDriveMotorPort = 1;
-    public static final int kFrontRightDriveMotorPort = 3;
-    public static final int kBackLeftDriveMotorPort = 5;
-    public static final int kBackRightDriveMotorPort = 7;
+    public static final int kFrontLeftDriveMotorPort = 4;
+    public static final int kFrontRightDriveMotorPort = 2;
+    public static final int kBackLeftDriveMotorPort = 6;
+    public static final int kBackRightDriveMotorPort = 8;
 
-    public static final int kFrontLeftTurnMotorPort = 2;
-    public static final int kFrontRightTurnMotorPort = 4;
-    public static final int kBackLeftTurnMotorPort = 6;
-    public static final int kBackRightTurnMotorPort = 8;
+    public static final int kFrontLeftTurnMotorPort = 3;
+    public static final int kFrontRightTurnMotorPort = 1;
+    public static final int kBackLeftTurnMotorPort = 5;
+    public static final int kBackRightTurnMotorPort = 7;
 
     //elevator motor ports
-    public static final int kLeftElevatorMotorPort =13;
+    public static final int kLeftElevatorMotorPort = 13;
     public static final int kRightElevatorMotorPort = 12;
 
     //shooter motor ports
@@ -82,9 +82,7 @@ public final class Constants {
 
     //robot clock cycle 
     public static final double kDriverPeriod = TimedRobot.kDefaultPeriod;
-  }
 
-  public static class OperatorConstants {
     //usb port for drive controller 
     public static final int kDriverControllerPort = 0;
 
@@ -102,9 +100,7 @@ public final class Constants {
     public static final int kDriverYButton = 4; 
     public static final int kDriverLeftShoulder = 5;
     public static final int kDriverRightShoulder = 6; 
-  }
 
-  public static class ManipulatorConstants {
     //usb port for manipulator controller
     public static final int kManipulatorControllerPort = 1;
 
@@ -118,10 +114,7 @@ public final class Constants {
     public static final int kManipulatorYButton = 4; 
     public static final int kManipulatorLeftShoulder = 5;
     public static final int kManipulatorRightShoulder = 6; 
-   
-  }
 
-  public static class SwerveModuleConstants {
     public static final double kWheelDiameterMeters = 0.0762; //diameter of the wheels in meters
     public static final double kWheelCircumferenceMeters = kWheelDiameterMeters * Math.PI; //0.239, circumference of the wheels in meters
     public static final double kDriveMotorReduction = (45.0 * 22) / (13 * 15); //5.079, factor for how much slower wheel is compared to motor
@@ -132,7 +125,6 @@ public final class Constants {
 
     public static final double kTurnEncoderPositionFactor = 2 * Math.PI; //radians 
     public static final double kTurnEncoderVelocityFactor = (2 * Math.PI) / 60.0; // radians per second
-
 
     public static final double kTurnEncoderPositionPIDMinInput = 0; //min input for turn encoder
     public static final double kTurnEncoderPositionPIDMaxInput = 2 * Math.PI; //max input for turn encoder
@@ -152,6 +144,21 @@ public final class Constants {
     public static final double kTurnFF = 0;
     public static final double kTurnMinOutput = -1;
     public static final double kTurnMaxOutput = 1;
+
+    //gains for climb motor PID (defaults)
+    public static final double kClimbP = 0.2;
+    public static final double kClimbI = 0;
+    public static final double kClimbD = 0;
+
+    //gains for elevator motor PID (defaults)
+    public static final double kElevatorP = 0.2;
+    public static final double kElevatorI = 0.004;
+    public static final double kElevatorD = 0;
+
+    //gains for shooter motor PID (defaults)
+    public static final double kShooterP = 0.1;
+    public static final double kShooterI = 0;
+    public static final double kShooterD = 0;
 
     //current limits for swerve motors
     public static final int kDriveCurrentLimit = 40;

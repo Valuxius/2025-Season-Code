@@ -4,30 +4,24 @@
 
 package frc.robot;
 
-
-import java.util.function.Supplier;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Constants.DriveConstants;
-import frc.robot.Constants.ManipulatorConstants;
-import frc.robot.Constants.OperatorConstants;
+import frc.robot.Constants.RobotConstants;
 import frc.robot.subsystems.ClimbSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
+import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.swerve.DriveSubsystem;
 import frc.robot.utils.LimelightHelpers;
 
@@ -35,20 +29,26 @@ public class RobotContainer {
   //creating the subsystems
   private final DriveSubsystem m_drive = new DriveSubsystem();
   private final ElevatorSubsystem m_elevator = new ElevatorSubsystem(
-    DriveConstants.kLeftElevatorMotorPort, 
-    DriveConstants.kRightElevatorMotorPort);
+    RobotConstants.kLeftElevatorMotorPort, 
+    RobotConstants.kRightElevatorMotorPort);
+  private final ShooterSubsystem m_shooter = new ShooterSubsystem(
+    RobotConstants.kShooterMotorPort, 
+    RobotConstants.kRotationMotorPort);
 
-  private final ClimbSubsystem m_climb = new ClimbSubsystem(DriveConstants.kClimbMotorPort);
+  private final ClimbSubsystem m_climb = new ClimbSubsystem(RobotConstants.kClimbMotorPort);
   //creating the controllers, allows our controllers to be detected by our programming
-  Joystick m_driverController = new Joystick(OperatorConstants.kDriverControllerPort); //kDriverControllerPort is the port on which the driver controller is connected to
-  Joystick m_manipulatorController = new Joystick(ManipulatorConstants.kManipulatorControllerPort); //kManipulatorControllerPort is the port on which the manipulator controller is connected to
+  Joystick m_driverController = new Joystick(RobotConstants.kDriverControllerPort); //kDriverControllerPort is the port on which the driver controller is connected to
+  Joystick m_manipulatorController = new Joystick(RobotConstants.kManipulatorControllerPort); //kManipulatorControllerPort is the port on which the manipulator controller is connected to
 
   //initializes dropdown menu for autos, will be sent to Shuffleboard/Smart Dashboard
   private final SendableChooser<Command> autoChooser;
 
   public RobotContainer() {
-    //fetches the "tx" value from the back limelight
-    double tx = LimelightHelpers.getTX("limelight_back");
+    //fetches the "tx" value from the front limelight
+    double tx = LimelightHelpers.getTX("limelight-front");
+    //double yaw = LimelightHelpers.getTV("limelight-front") ? LimelightHelpers.getTargetPose_RobotSpace("front")[4] : 0;
+
+    LimelightHelpers.setLEDMode_ForceOff("limelight-front");
 
     //registers commands to be used in PathPlanner, allowing us to use these commands during auto
     NamedCommands.registerCommand("Reset Gyro", new InstantCommand(() -> m_drive.resetGyro(), m_drive));
@@ -62,14 +62,17 @@ public class RobotContainer {
     autoChooser = AutoBuilder.buildAutoChooser();
 
     //default command for drive subsystem
-     m_drive.setDefaultCommand(
-        new RunCommand( 
-            () -> m_drive.drive(
-                squared(-MathUtil.applyDeadband(m_driverController.getRawAxis(OperatorConstants.kLeftYAxisPort), .05)), 
-                squared(-MathUtil.applyDeadband(m_driverController.getRawAxis(OperatorConstants.kLeftXAxisPort), .05)),
-                squared(-MathUtil.applyDeadband(m_driverController.getRawAxis(OperatorConstants.kRightXAxisPort),.05)), 
-                true), //turn to false to get rid of field relative
-            m_drive));
+    m_drive.setDefaultCommand(
+      new RunCommand( 
+        () -> m_drive.drive(
+          squared(-MathUtil.applyDeadband(m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort), .05)), 
+          squared(-MathUtil.applyDeadband(m_driverController.getRawAxis(RobotConstants.kLeftXAxisPort), .05)),
+          squared(-MathUtil.applyDeadband(m_driverController.getRawAxis(RobotConstants.kRightXAxisPort), .05)), 
+          true), //turn to false to get rid of field relative
+      m_drive));
+
+    m_shooter.setDefaultCommand(new RunCommand(() -> m_shooter.shoot(MathUtil.applyDeadband(m_manipulatorController.getRawAxis(2) - m_manipulatorController.getRawAxis(3), .05)), m_shooter));
+    
 
             //squared(-MathUtil.applyDeadband(m_driverController.getRawAxis(OperatorConstants.kRightXAxisPort),.05))
 
@@ -97,48 +100,98 @@ public class RobotContainer {
     //initializing driver buttons
     Trigger driverBButton = new JoystickButton(
       m_driverController, 
-      OperatorConstants.kDriverBButton
+      RobotConstants.kDriverBButton
     );
     Trigger driverAButton = new JoystickButton(
       m_driverController, 
-      OperatorConstants.kDriverAButton
+      RobotConstants.kDriverAButton
     );
     Trigger driverXButton = new JoystickButton(
       m_driverController, 
-      OperatorConstants.kDriverXButton
+      RobotConstants.kDriverXButton
     );
     Trigger driverYButton = new JoystickButton(
       m_driverController, 
-      OperatorConstants.kDriverYButton
+      RobotConstants.kDriverYButton
     );
+    Trigger driverLeftShoulder = new JoystickButton(
+      m_driverController, 
+      RobotConstants.kDriverLeftShoulder);
+    Trigger driverRightShoulder = new JoystickButton(
+      m_driverController, 
+      RobotConstants.kDriverRightShoulder);
 
     //initiating manipulator buttons
     Trigger manipulatorXButton = new JoystickButton(
       m_manipulatorController, 
-      ManipulatorConstants.kManipulatorXButton
+      RobotConstants.kManipulatorXButton
     );
     Trigger manipulatorYButton = new JoystickButton(
       m_manipulatorController, 
-      ManipulatorConstants.kManipulatorYButton
+      RobotConstants.kManipulatorYButton
     );
     Trigger manipulatorAButton = new JoystickButton(
       m_manipulatorController,
-      ManipulatorConstants.kManipulatorAButton
+      RobotConstants.kManipulatorAButton
+    );
+    Trigger manipulatorBButton = new JoystickButton(
+      m_manipulatorController,
+      RobotConstants.kManipulatorBButton
+    );
+    Trigger manipulatorLeftShoulder = new JoystickButton(
+      m_manipulatorController, 
+      RobotConstants.kManipulatorLeftShoulder
+    );
+    Trigger manipulatorRightShoulder = new JoystickButton(
+      m_manipulatorController, 
+      RobotConstants.kManipulatorRightShoulder
     );
 
     //binding buttons to controls  
     driverBButton.onTrue(m_drive.resetGyro()); //reset gyro button
-    driverAButton.whileTrue(new RunCommand(() -> m_drive.setX(), m_drive)); //handbrake button
-    manipulatorAButton.whileTrue(new RunCommand(() -> m_climb.rotate(-0.10), m_climb));
+    driverXButton.whileTrue(new RunCommand(() -> m_drive.setX(), m_drive)); //handbrake button
+    manipulatorAButton.whileTrue(new RunCommand(() -> m_climb.rotate(-0.40), m_climb));
     manipulatorAButton.onFalse(new InstantCommand(() -> m_climb.rotate(0)));
-    manipulatorYButton.whileTrue(new RunCommand(() -> m_climb.rotate(0.10), m_climb));
+    manipulatorYButton.whileTrue(new RunCommand(() -> m_climb.rotate(0.40), m_climb));
     manipulatorYButton.onFalse(new InstantCommand(() -> m_climb.rotate(0)));
+    manipulatorXButton.whileTrue(new RunCommand(() -> m_elevator.ascend(0.4), m_elevator));
+    manipulatorXButton.onFalse(new InstantCommand(() -> m_elevator.ascend(0)));
+    manipulatorBButton.whileTrue(new RunCommand(() -> m_elevator.descend(0.4), m_elevator));
+    manipulatorBButton.onFalse(new InstantCommand(() -> m_elevator.descend(0)));
+
+    manipulatorLeftShoulder.onTrue(new InstantCommand(() -> m_shooter.rotate(0.1)));
+    manipulatorLeftShoulder.onFalse(new InstantCommand(() -> m_shooter.rotate(-0.0)));
+    manipulatorRightShoulder.onTrue(new InstantCommand(() -> m_shooter.rotate(-0.1)));
+    manipulatorRightShoulder.onFalse(new InstantCommand(() -> m_shooter.rotate(-0.0)));
+    
+    
 
     /*driverLeftTrigger.whileTrue(new RunCommand(
       () -> m_elevator.ascend(DriveConstants.kElevatorMaxSpeed))); //move elevator up
     driverRightTrigger.whileTrue(new RunCommand(
       () -> m_elevator.descend(DriveConstants.kElevatorMaxSpeed))); //move elevator down
        */
+
+    //test
+    driverLeftShoulder.onTrue(new InstantCommand(() -> LimelightHelpers.setLEDMode_ForceOn("limelight-front")));
+    driverRightShoulder.onTrue(new InstantCommand(() -> LimelightHelpers.setLEDMode_ForceOff("limelight-front")));
+
+    driverYButton.whileTrue(
+      new RunCommand(
+          () -> m_drive.drive(
+            MathUtil.clamp(LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[2] - 0.5, 0, 0.25),
+            0,
+            MathUtil.clamp(LimelightHelpers.getTX("limelight-front") * 0.01, -0.4, 0.4), 
+            false), 
+          m_drive));
+    driverAButton.whileTrue(
+      new RunCommand(
+          () -> m_drive.drive(
+            squared(-MathUtil.applyDeadband(m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort), .05)),
+            MathUtil.applyDeadband(MathUtil.clamp(LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[0], -0.25, 0.25), 0.01),
+            MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[4] * 0.01, -0.4, 0.4),0.03), 
+            false), 
+          m_drive));
 
   }
 
