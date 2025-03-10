@@ -19,27 +19,49 @@ import edu.wpi.first.wpilibj.TimedRobot;
  */
 public final class Constants {
   public static class RobotConstants { 
-    public static final double kMaxSpeedMetersPerSecond = 1.8; //4.3 
+    public static final double kMaxSpeedMetersPerSecond = 3; //4.3 
     public static final double kMaxAccelerationMetersPerSecond = 4.3; //theoretical max
     public static final double kMaxAngularSpeed = 2 * Math.PI; //radians per sec 
     public static final double kMaxAngularAcceleration = 2 * Math.PI; // radians per second per second
 
-    //shift in motors to temporarily test robot without having to recalibrate
-    //set to 0 after calibration
-    public static final double kFrontLeftOffset = 0;
-    public static final double kBackLeftOffset = 0;
-    public static final double kFrontRightOffset = 0;
-    public static final double kBackRightOffset = 0;
+    public static final double kWheelDiameterMeters = 0.0762; //diameter of the wheels in meters
+    public static final double kWheelCircumferenceMeters = kWheelDiameterMeters * Math.PI; //0.239, circumference of the wheels in meters
+    public static final double kDriveMotorReduction = (45.0 * 22) / (13 * 15); //5.079, factor for how much slower wheel is compared to motor
+    public static final double kDriveMotorFreeSpeedRps = 5676 / 60; //94.0, max rotations per second for drive motor
+    public static final double kDriveWheelFreeSpeedRps = (kDriveMotorFreeSpeedRps * kWheelCircumferenceMeters) / kDriveMotorReduction; //4.43, max speed for drive wheel
+    public static final double kDriveEncoderPositionFactor = kWheelCircumferenceMeters / kDriveMotorReduction; // meters
+    public static final double kDriveEncoderVelocityFactor = (kWheelCircumferenceMeters / kDriveMotorReduction) / 60.0; // meters per second
 
-    //slew rate helps stop wheel failure
-    public static final double kDirectionSlewRate = 1.2; // radians per second
-    public static final double kMagnitudeSlewRate = 1.8; // percent per second (1 = 100%)
-    public static final double kRotationalSlewRate = 2.0; // percent per second (1 = 100%)
+    //gains for drive motor PID (defaults)
+    public static final double kDriveP = .03; 
+    public static final double kDriveI = 0; 
+    public static final double kDriveD = 0.0003; 
+    public static final double kDriveFF = 1 / kDriveWheelFreeSpeedRps; 
+    public static final double kDriveMinOutput = -1; 
+    public static final double kDriveMaxOutput = 1; 
 
-    //distance from center of left wheel to right wheel
-    public static final double kTrackWidth = Units.inchesToMeters(24.5);
-    //distance from center of front wheel to back wheel
-    public static final double kTrackLength = Units.inchesToMeters(24.5);
+    //gains for turn motor PID (defaults)
+    public static final double kTurnP = 0.8; 
+    public static final double kTurnI = 0.001;
+    public static final double kTurnD = 0.01;
+    public static final double kTurnFF = 0;
+    public static final double kTurnMinOutput = -1;
+    public static final double kTurnMaxOutput = 1;
+
+    //gains for climb motor PID (defaults)
+    public static final double kClimbP = 0.2;
+    public static final double kClimbI = 0.001;
+    public static final double kClimbD = 0;
+
+    //gains for elevator motor PID (defaults)
+    public static final double kElevatorP = 0.3;
+    public static final double kElevatorI = 0.004;
+    public static final double kElevatorD = 0;
+
+    //gains for shooter motor PID (defaults)
+    public static final double kShooterP = 0.1;
+    public static final double kShooterI = 0.004;
+    public static final double kShooterD = 0;
 
     //drive motor ports 
     public static final int kFrontLeftDriveMotorPort = 4;
@@ -63,8 +85,60 @@ public final class Constants {
     //climb motor port
     public static final int kClimbMotorPort = 11;
 
-    //elevator max speed (max 1)
-    public static final double kElevatorMaxSpeed = 0.2;
+    //usb port for drive controller 
+    public static final int kDriverControllerPort = 0;
+
+    //important buttons/axis for driver controller 
+    public static final int kLeftXAxisPort = 0;
+    public static final int kLeftYAxisPort = 1;
+    public static final int kRightXAxisPort = 4;
+
+    public static final int kDriverLeftTriggerAxis = 2; 
+    public static final int kDriverRightTriggerAxis = 3;   
+
+    public static final int kDriverXButton = 3; 
+    public static final int kDriverAButton = 1; 
+    public static final int kDriverBButton = 2; 
+    public static final int kDriverYButton = 4; 
+    public static final int kDriverLeftShoulder = 5;
+    public static final int kDriverRightShoulder = 6; 
+    public static final int kDriverMinusButton = 7;
+    public static final int kDriverPlusButton = 8;
+
+    //usb port for manipulator controller
+    public static final int kManipulatorControllerPort = 1;
+
+    //important buttons/axis for manipulator controller
+    public static final int kManipulatorLeftTriggerAxis = 2; 
+    public static final int kManipulatorRightTriggerAxis = 3; 
+
+    public static final int kManipulatorXButton = 3; 
+    public static final int kManipulatorAButton = 1; 
+    public static final int kManipulatorBButton = 2; 
+    public static final int kManipulatorYButton = 4; 
+    public static final int kManipulatorLeftShoulder = 5;
+    public static final int kManipulatorRightShoulder = 6; 
+    public static final int kManipulatorMinusButton = 7;
+    public static final int kManipulatorPlusButton = 8;
+    public static final int kManipulatorLeftJoystick = 9;
+    public static final int kManipulatorRightJoystick = 10;
+
+    //shift in motors to temporarily test robot without having to recalibrate
+    //set to 0 after calibration
+    public static final double kFrontLeftOffset = 0;
+    public static final double kBackLeftOffset = 0;
+    public static final double kFrontRightOffset = 0;
+    public static final double kBackRightOffset = 0;
+
+    //slew rate helps stop wheel failure
+    public static final double kDirectionSlewRate = 1.2; // radians per second
+    public static final double kMagnitudeSlewRate = 1.8; // percent per second (1 = 100%)
+    public static final double kRotationalSlewRate = 2.0; // percent per second (1 = 100%)
+
+    //distance from center of left wheel to right wheel
+    public static final double kTrackWidth = Units.inchesToMeters(24.5);
+    //distance from center of front wheel to back wheel
+    public static final double kTrackLength = Units.inchesToMeters(24.5);
 
     //angle offsets for each motor (in radians)
     public static final double kFrontLeftChassisAngularOffset = -Math.PI / 2 + Units.degreesToRadians(kFrontLeftOffset);
@@ -83,82 +157,11 @@ public final class Constants {
     //robot clock cycle 
     public static final double kDriverPeriod = TimedRobot.kDefaultPeriod;
 
-    //usb port for drive controller 
-    public static final int kDriverControllerPort = 0;
-
-    //important buttons/axis for driver controller 
-    public static final int kLeftXAxisPort = 0;
-    public static final int kLeftYAxisPort = 1;
-    public static final int kRightXAxisPort = 4;
-
-    public static final int kDriverLeftTriggerAxis = 2; 
-    public static final int kDriverRightTriggerAxis = 3;   
-
-    public static final int kDriverXButton = 3; 
-    public static final int kDriverAButton = 1; 
-    public static final int kDriverBButton = 2; 
-    public static final int kDriverYButton = 4; 
-    public static final int kDriverLeftShoulder = 5;
-    public static final int kDriverRightShoulder = 6; 
-
-    //usb port for manipulator controller
-    public static final int kManipulatorControllerPort = 1;
-
-    //important buttons/axis for manipulator controller
-    public static final int kManipulatorLeftTriggerAxis = 2; 
-    public static final int kManipulatorRightTriggerAxis = 3; 
-
-    public static final int kManipulatorXButton = 3; 
-    public static final int kManipulatorAButton = 1; 
-    public static final int kManipulatorBButton = 2; 
-    public static final int kManipulatorYButton = 4; 
-    public static final int kManipulatorLeftShoulder = 5;
-    public static final int kManipulatorRightShoulder = 6; 
-
-    public static final double kWheelDiameterMeters = 0.0762; //diameter of the wheels in meters
-    public static final double kWheelCircumferenceMeters = kWheelDiameterMeters * Math.PI; //0.239, circumference of the wheels in meters
-    public static final double kDriveMotorReduction = (45.0 * 22) / (13 * 15); //5.079, factor for how much slower wheel is compared to motor
-    public static final double kDriveMotorFreeSpeedRps = 5676 / 60; //94.0, max rotations per second for drive motor
-    public static final double kDriveWheelFreeSpeedRps = (kDriveMotorFreeSpeedRps * kWheelCircumferenceMeters) / kDriveMotorReduction; //4.43, max speed for drive wheel
-    public static final double kDriveEncoderPositionFactor = kWheelCircumferenceMeters / kDriveMotorReduction; // meters
-    public static final double kDriveEncoderVelocityFactor = (kWheelCircumferenceMeters / kDriveMotorReduction) / 60.0; // meters per second
-
     public static final double kTurnEncoderPositionFactor = 2 * Math.PI; //radians 
     public static final double kTurnEncoderVelocityFactor = (2 * Math.PI) / 60.0; // radians per second
 
     public static final double kTurnEncoderPositionPIDMinInput = 0; //min input for turn encoder
     public static final double kTurnEncoderPositionPIDMaxInput = 2 * Math.PI; //max input for turn encoder
-
-    //gains for drive motor PID (defaults)
-    public static final double kDriveP = .03; 
-    public static final double kDriveI = 0.0001; 
-    public static final double kDriveD = 0.0003; 
-    public static final double kDriveFF = 1 / kDriveWheelFreeSpeedRps; 
-    public static final double kDriveMinOutput = -1; 
-    public static final double kDriveMaxOutput = 1; 
-
-    //gains for turn motor PID (defaults)
-    public static final double kTurnP = 0.8; 
-    public static final double kTurnI = 0.001;
-    public static final double kTurnD = 0.01;
-    public static final double kTurnFF = 0;
-    public static final double kTurnMinOutput = -1;
-    public static final double kTurnMaxOutput = 1;
-
-    //gains for climb motor PID (defaults)
-    public static final double kClimbP = 0.2;
-    public static final double kClimbI = 0;
-    public static final double kClimbD = 0;
-
-    //gains for elevator motor PID (defaults)
-    public static final double kElevatorP = 0.2;
-    public static final double kElevatorI = 0.004;
-    public static final double kElevatorD = 0;
-
-    //gains for shooter motor PID (defaults)
-    public static final double kShooterP = 0.1;
-    public static final double kShooterI = 0;
-    public static final double kShooterD = 0;
 
     //current limits for swerve motors
     public static final int kDriveCurrentLimit = 40;

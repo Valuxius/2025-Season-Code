@@ -4,7 +4,8 @@
 
 package frc.robot;
 
-import edu.wpi.first.net.PortForwarder;
+import com.revrobotics.spark.SparkBase.ControlType;
+
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -16,9 +17,6 @@ public class Robot extends TimedRobot {
 
   public Robot() {
     m_robotContainer = new RobotContainer(); //creates the robot container
-    /*for (int port = 5800; port <= 5809; port++) { //port forwards limelight ports to be able to be accessed through usb
-      PortForwarder.add(port, "limelight-front.local", port);
-    }*/
   }
 
   //runs periodically while the robot is active
@@ -33,7 +31,24 @@ public class Robot extends TimedRobot {
 
   //runs periodically while the robot is disabled
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+    m_robotContainer.getElevator()
+      .getLeftPID().setReference(
+        m_robotContainer.getElevator().getLeftEncoder().getPosition(),
+        ControlType.kPosition);
+    m_robotContainer.getElevator()
+      .getRightPID().setReference(
+        m_robotContainer.getElevator().getRightEncoder().getPosition(),
+        ControlType.kPosition);
+    m_robotContainer.getShooter()
+      .getRotationPID().setReference(
+        m_robotContainer.getShooter().getRotationEncoder().getPosition(),
+        ControlType.kPosition);
+    m_robotContainer.getClimb()
+      .getClimbPID().setReference(
+        m_robotContainer.getClimb().getClimbEncoder().getPosition(),
+        ControlType.kPosition);
+  }
 
   //runs after robot leaves disabled state
   @Override

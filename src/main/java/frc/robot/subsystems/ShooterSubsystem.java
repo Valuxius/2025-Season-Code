@@ -12,7 +12,6 @@ import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.MotorConfigs;
 
@@ -49,7 +48,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     //configures the PIDs for the motors
     m_shooterMotor.configure(MotorConfigs.m_shooterConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-    m_rotationMotor.configure(MotorConfigs.m_elevatorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    m_rotationMotor.configure(MotorConfigs.m_shooterConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
   /**
@@ -79,14 +78,30 @@ public class ShooterSubsystem extends SubsystemBase {
     m_rotationMotor.set(speed);
   }
 
+  /**
+   * Gets the shooter's rotation PID controller.
+   * 
+   * @return Rotation PID controler
+   */
+  public SparkClosedLoopController getRotationPID() {
+    return m_rotationPID;
+  }
+
+  /**
+   * Gets the shooter's rotation encoder.
+   * 
+   * @return Shooter rotation encoder
+   */
+  public RelativeEncoder getRotationEncoder() {
+    return m_rotationEncoder;
+  }
+
+  
+
   // This method will be called once per scheduler run
   @Override
   public void periodic() {
     //sets the encoder reference for the PID
-    //m_rotationPID.setReference(m_rotationEncoder.getPosition(), ControlType.kPosition);
-    //m_shooterPID.setReference(m_shooterEncoder.getPosition(), ControlType.kPosition);
-
-    //puts data on SmartDashboard for troubleshooting
-    SmartDashboard.putNumber("Encoder 2", m_rotationEncoder.getVelocity());
+    m_rotationPID.setReference(m_rotationEncoder.getPosition(), ControlType.kPosition);
   }
 }

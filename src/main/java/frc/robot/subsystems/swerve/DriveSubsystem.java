@@ -22,6 +22,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -259,6 +260,8 @@ public class DriveSubsystem extends SubsystemBase {
       m_gyro.getRotation2d(), 
       getPositions()
     );
+
+    SmartDashboard.putNumber("Limelight", LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[0]);
     
     //boolean variable for whether limelight data is accurate or not. if data is inaccurate, rejects limelight pose update
     boolean doRejectUpdate = false;

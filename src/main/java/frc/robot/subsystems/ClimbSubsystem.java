@@ -7,9 +7,13 @@ package frc.robot.subsystems;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.MotorConfigs;
 
 public class ClimbSubsystem extends SubsystemBase {
   //initializing the motor
@@ -31,6 +35,10 @@ public class ClimbSubsystem extends SubsystemBase {
 
     //creating the PID controllers (disabled for now)
     m_climbPID = m_climbMotor.getClosedLoopController();
+
+    m_climbEncoder.setPosition(0);
+
+    m_climbMotor.configure(MotorConfigs.m_climbConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
   /**
@@ -51,8 +59,28 @@ public class ClimbSubsystem extends SubsystemBase {
     m_climbMotor.set(speed);
   }
 
+  /**
+   * Gets the climb PID controller.
+   * 
+   * @return Climb PID controller
+   */
+  public SparkClosedLoopController getClimbPID() {
+    return m_climbPID;
+  }
+
+  /**
+   * Gets the climb encoder.
+   * 
+   * @return Climb encoder
+   */
+  public RelativeEncoder getClimbEncoder() {
+    return m_climbEncoder;
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    m_climbPID.setReference(m_climbEncoder.getPosition(), ControlType.kPosition);
+
   }
 }
