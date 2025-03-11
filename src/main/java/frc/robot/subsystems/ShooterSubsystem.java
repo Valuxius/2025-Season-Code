@@ -30,17 +30,23 @@ public class ShooterSubsystem extends SubsystemBase {
   private final SparkClosedLoopController m_rotationPID;
 
   //variable for preset
-  public double preset = 0;
+  private double preset = 0;
 
   //angle variables (0 should be straight up, increased values bring the shooter down)
-  public double netPreset = 3;
-  public double algaePreset = 3.5;
-  public double floorPreset = 8;
-  public double coralPreset = 11;
-  public double humanPlayerPreset = 2;
+  private double netPreset = 3;
+  private double algaePreset = 3.5;
+  private double floorPreset = 8;
+  private double coralPreset = 11;
+  private double humanPlayerPreset = 2;
 
   //speed variable
-  public double speed = 0.1;
+  private double speed = 0.1;
+
+  //rotation variable
+  private double rotation = 0;
+
+  //lock variable
+  private boolean lock = false; 
 
   /** Creates a new ShooterSubsystem. */
   public ShooterSubsystem(int p_shooterID, int p_rotationID) {
@@ -89,6 +95,7 @@ public class ShooterSubsystem extends SubsystemBase {
    * @param speed Speed to rotate at, 0 - 1.
    */
   public void rotate(double speed) {
+    lock = false;
     m_rotationMotor.set(speed);
   }
 
@@ -98,6 +105,7 @@ public class ShooterSubsystem extends SubsystemBase {
    * @param preset Preset number
    */
   public void setPreset(int preset) {
+    lock = true;
     this.preset = preset;
   }
 
@@ -122,115 +130,35 @@ public class ShooterSubsystem extends SubsystemBase {
   // This method will be called once per scheduler run
   @Override
   public void periodic() {
-    //sets the encoder reference for the PID
-    m_rotationPID.setReference(m_rotationEncoder.getPosition(), ControlType.kPosition);
+    if (lock) {
+      if (preset == 0) rotation = 0;
+      else if (preset == 1) rotation = netPreset;
+      else if (preset == 2) rotation = algaePreset;
+      else if (preset == 3) rotation = floorPreset;
+      else if (preset == 4) rotation = coralPreset;
+      else if (preset == 5) rotation = humanPlayerPreset;
 
-
-    //points the shooter straight up
-    if (preset == 0) { 
-      if (m_rotationEncoder.getPosition() > 1) {
-        m_rotationMotor.set(-0.1);
-      } 
-    }
-    
-    //net preset
-    else if (preset == 1) { 
-      if (m_rotationEncoder.getPosition() < netPreset) {
-        if (m_rotationEncoder.getPosition() > netPreset - 2) {
-          m_rotationMotor.set(MathUtil.applyDeadband(speed * ((netPreset - m_rotationEncoder.getPosition())/2), 0.05));
+      if (m_rotationEncoder.getPosition() < rotation) {
+        if (m_rotationEncoder.getPosition() > rotation - 2) {
+          m_rotationMotor.set(MathUtil.applyDeadband(speed * ((rotation - m_rotationEncoder.getPosition())/2), 0.05));
         }
         else {
           m_rotationMotor.set(speed);
         }
       }
-      else if (m_rotationEncoder.getPosition() > netPreset) {
-        if (m_rotationEncoder.getPosition() < netPreset + 2) {
-          m_rotationMotor.set(-MathUtil.applyDeadband(speed * ((m_rotationEncoder.getPosition() - netPreset)/2), 0.05));
+      else if (m_rotationEncoder.getPosition() > rotation) {
+        if (m_rotationEncoder.getPosition() < rotation + 2) {
+          m_rotationMotor.set(-MathUtil.applyDeadband(speed * ((m_rotationEncoder.getPosition() - rotation)/2), 0.05));
         }
         else {
           m_rotationMotor.set(-speed);
         }
       }
+      m_rotationPID.setReference(rotation, ControlType.kPosition);
     }
 
-    //algae preset
-    else if (preset == 2) {
-      if (m_rotationEncoder.getPosition() < algaePreset) {
-        if (m_rotationEncoder.getPosition() > algaePreset - 2) {
-          m_rotationMotor.set(MathUtil.applyDeadband(speed * ((algaePreset - m_rotationEncoder.getPosition())/2), 0.05));
-        }
-        else {
-          m_rotationMotor.set(speed);
-        }
-      }
-      else if (m_rotationEncoder.getPosition() > algaePreset) {
-        if (m_rotationEncoder.getPosition() < algaePreset + 2) {
-          m_rotationMotor.set(-MathUtil.applyDeadband(speed * ((m_rotationEncoder.getPosition() - algaePreset)/2), 0.05));
-        }
-        else {
-          m_rotationMotor.set(-speed);
-        }
-      }
-    }
-
-    //floor preset
-    else if (preset == 3) {
-      if (m_rotationEncoder.getPosition() < floorPreset) {
-        if (m_rotationEncoder.getPosition() > floorPreset - 2) {
-          m_rotationMotor.set(MathUtil.applyDeadband(speed * ((floorPreset - m_rotationEncoder.getPosition())/2), 0.05));
-        }
-        else {
-          m_rotationMotor.set(speed);
-        }
-      }
-      else if (m_rotationEncoder.getPosition() > floorPreset) {
-        if (m_rotationEncoder.getPosition() < floorPreset + 2) {
-          m_rotationMotor.set(-MathUtil.applyDeadband(speed * ((m_rotationEncoder.getPosition() - floorPreset)/2), 0.05));
-        }
-        else {
-          m_rotationMotor.set(-speed);
-        }
-      }
-    }
-
-    //coral preset
-    else if (preset == 4) {
-      if (m_rotationEncoder.getPosition() < coralPreset) {
-        if (m_rotationEncoder.getPosition() > coralPreset - 2) {
-          m_rotationMotor.set(MathUtil.applyDeadband(speed * ((coralPreset - m_rotationEncoder.getPosition())/2), 0.05));
-        }
-        else {
-          m_rotationMotor.set(speed);
-        }
-      }
-      else if (m_rotationEncoder.getPosition() > coralPreset) {
-        if (m_rotationEncoder.getPosition() < coralPreset + 1) {
-          m_rotationMotor.set(-MathUtil.applyDeadband(speed * ((m_rotationEncoder.getPosition() - coralPreset)), 0.05));
-        }
-        else {
-          m_rotationMotor.set(-speed);
-        }
-      }
-    }
-
-    //human player preset
-    else if (preset == 5) {
-      if (m_rotationEncoder.getPosition() < humanPlayerPreset) {
-        if (m_rotationEncoder.getPosition() > humanPlayerPreset - 2) {
-          m_rotationMotor.set(MathUtil.applyDeadband(speed * ((humanPlayerPreset - m_rotationEncoder.getPosition())/2), 0.05));
-        }
-        else {
-          m_rotationMotor.set(speed);
-        }
-      }
-      else if (m_rotationEncoder.getPosition() > humanPlayerPreset) {
-        if (m_rotationEncoder.getPosition() < humanPlayerPreset + 1) {
-          m_rotationMotor.set(-MathUtil.applyDeadband(speed * ((m_rotationEncoder.getPosition() - humanPlayerPreset)), 0.05));
-        }
-        else {
-          m_rotationMotor.set(-speed);
-        }
-      }
+    else {
+      m_rotationPID.setReference(m_rotationEncoder.getPosition(), ControlType.kPosition);
     }
   }
 }
