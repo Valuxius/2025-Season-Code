@@ -31,16 +31,28 @@ public class ElevatorSubsystem extends SubsystemBase {
   private final SparkClosedLoopController m_rPID;
 
   //variables for the presets
-  private double stage = 0;
-  private boolean stageLock = false; //will toggle to false when needed, locks the elevator at preset if set to true
+  private double preset = 0;
+  private boolean lock = true; //will toggle to false when needed, locks the elevator at preset if set to true
+  
+  //height instance variable
+  private double height = 0;
   
   //heights for presets
-  private static double stage1Height = 12.5;
-  private static double stage2Height = 27;
-  private static double stage3Height = 41;
+  private double stage1Height = 12.5; //L1 Coral Height
+  private double stage2Height = 27; //L2 Coral Height
+  private double stage3Height = 41; //L3 Coral Height
+  private double maxHeight = 48; //Max Height
+
+  private double floorAlgaeHeight = 10; //Floor Algae Height
+  private double l1AlgaeHeight = 0; //L1 Algae Height
+  private double l2AlgaeHeight = 26.5; //L2 Algae Height
+
+  private double processorHeight = 2; //Processor Height
+
+  private double humanPlayerHeight = 14; //Human Player Height
 
   //speed for presets (0 - 1)
-  private static double elevatorSpeed = 0.3;
+  private double elevatorSpeed = 0.3;
 
   /** Creates a new ElevatorSubsystem. */
   public ElevatorSubsystem(int p_leftID, int p_rightID) {
@@ -71,13 +83,13 @@ public class ElevatorSubsystem extends SubsystemBase {
    * @param speed Speed of ascent, 0 - 1
    */
   public void ascend(double speed) {
-    stageLock = false; //set to false to allow free moving
+    lock = false; //set to false to allow free moving
     double newSpeed = speed; //creates new variable for adjusted speed
 
     //reduces speed near the top as a "stop"
-    if (m_lEncoder.getPosition() > 42) { //starts reducing speed after encoder position reaches 42
+    if (m_lEncoder.getPosition() > maxHeight - 3) { //starts reducing speed after encoder position reaches 3 below maxHeight
       newSpeed = Math.abs( //absolute value
-        (((speed)/3)*(m_lEncoder.getPosition() - 45)) //linearly decreases speed to 0 at position 45
+        (((speed)/3)*(m_lEncoder.getPosition() - maxHeight)) //linearly decreases speed to 0 at maxHeight
       ); 
     } 
 
@@ -95,7 +107,7 @@ public class ElevatorSubsystem extends SubsystemBase {
    * @param speed Speed of descent, 0 - 1
    */
   public void descend(double speed) {
-    stageLock = false; //set to false to allow free moving
+    lock = false; //set to false to allow free moving
     double newSpeed = speed; //creates new variable for adjusted speed
 
     //reduces speed near the bottom as a "stop"
@@ -115,29 +127,13 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   /**
-   * Increase the elevator stage.
-   */
-  public void increaseStage() {
-    stageLock = false;
-    stage++;
-  }
-
-  /**
-   * Decrease the elevator stage.
-   */
-  public void decreaseStage() {
-    stageLock = true;
-    if (stage > 0) stage--;
-  }
-
-  /**
    * Sets the elevator stage.
    * 
    * @param stage Stage to be set to.
    */
-  public void setStage(double stage) {
-    stageLock = true;
-    if (stage >= 0) this.stage = stage;
+  public void setPreset(double preset) {
+    lock = true;
+    if (preset >= 0) this.preset = preset;
   }
 
   /**
@@ -190,91 +186,51 @@ public class ElevatorSubsystem extends SubsystemBase {
     //sets the PID references to the encoder position
     m_lPID.setReference(m_lEncoder.getPosition(), ControlType.kPosition);
     m_rPID.setReference(m_rEncoder.getPosition(), ControlType.kPosition);
-    SmartDashboard.putNumber("Stage", stage);
+    SmartDashboard.putNumber("Preset", preset);
     
     //puts encoder position on SmartDashboard for troubleshooting
     SmartDashboard.putNumber("Elevator Encoder", m_lEncoder.getPosition());
-    if (stageLock) {
-      if (stage == 0) {
-        if (m_lEncoder.getPosition() < 5) {
-          m_lMotor.set(-0.1 * (m_lEncoder.getPosition()/5));
-          m_rMotor.set(0.1 * (m_lEncoder.getPosition()/5));
-        } 
-        else if (m_lEncoder.getPosition() < 10) {
-          m_lMotor.set(-(0.1 + (((0.2)/5)*(m_lEncoder.getPosition()))));
-          m_rMotor.set(0.1 + ((0.2)/5)*(m_lEncoder.getPosition()));
-        } 
+    if (lock) {
+      //setting the height
+      if (preset == 0) height = 0; //starting height
+      else if (preset == 1) height = stage1Height; //L1 coral height
+      else if (preset == 2) height = stage2Height; //L2 coral height
+      else if (preset == 3) height = stage3Height; //L3 coral height
+      else if (preset == 4) height = floorAlgaeHeight; //floor algae height
+      else if (preset == 5) height = l1AlgaeHeight; //L1 algae height
+      else if (preset == 6) height = l2AlgaeHeight; //L2 algae height
+      else if (preset == 7) height = processorHeight; //processor height
+      else if (preset == 8) height = humanPlayerHeight; //human player height
+      else if (preset == 9) height = maxHeight; ///processor height
+      
+      //running the presets
+      if (m_lEncoder.getPosition() < height) {
+        if (m_lEncoder.getPosition() > height - 5 && m_lEncoder.getPosition() < height-1) {
+          m_lMotor.set(MathUtil.applyDeadband((elevatorSpeed) * ((height - m_lEncoder.getPosition())/5), 0.05));
+          m_rMotor.set(-MathUtil.applyDeadband((elevatorSpeed) * ((height - m_lEncoder.getPosition())/5), 0.05));
+        }
+        else {
+          m_lMotor.set(elevatorSpeed);
+          m_rMotor.set(-elevatorSpeed);
+        }
+      } 
+      else if (m_lEncoder.getPosition() > height) {
+        if (m_lEncoder.getPosition() < 5 && height == 0) {
+          m_lMotor.set(-0.1);
+          m_rMotor.set(0.1);
+        }
+        else if (m_lEncoder.getPosition() < height + 5) {
+          m_lMotor.set(-MathUtil.applyDeadband((elevatorSpeed-0.1) * ((m_lEncoder.getPosition() - height)/5) + 0.1, 0.05));
+          m_rMotor.set(MathUtil.applyDeadband((elevatorSpeed-0.1) * ((m_lEncoder.getPosition() - height)/5) + 0.1, 0.05));
+        }
         else {
           m_lMotor.set(-elevatorSpeed);
           m_rMotor.set(elevatorSpeed);
         }
-        if (m_lEncoder.getVelocity() >= -0.01 && m_lEncoder.getPosition() < 3) {
+        if (m_lEncoder.getVelocity() >= -0.03 && m_lEncoder.getPosition() < 3 && height == 0) {
           resetEncoders();
         }
       }
-      
-      else if (stage == 1) {
-        if (m_lEncoder.getPosition() < stage1Height) {
-          m_lMotor.set(MathUtil.applyDeadband(elevatorSpeed * ((stage1Height - m_lEncoder.getPosition())/stage1Height), 0.05));
-          m_rMotor.set(-MathUtil.applyDeadband(elevatorSpeed * ((stage1Height - m_lEncoder.getPosition())/stage1Height), 0.05));
-        } 
-        else if (m_lEncoder.getPosition() > stage1Height) {
-          if (m_lEncoder.getPosition() < stage1Height + 5) {
-            m_lMotor.set(-MathUtil.applyDeadband(elevatorSpeed * ((m_lEncoder.getPosition() - stage1Height)/5), 0.05));
-            m_rMotor.set(MathUtil.applyDeadband(elevatorSpeed * ((m_lEncoder.getPosition() - stage1Height)/5), 0.05));
-          }
-          else {
-            m_lMotor.set(-elevatorSpeed);
-            m_rMotor.set(elevatorSpeed);
-          }
-        }
-      }
-
-      else if (stage == 2) {
-        if (m_lEncoder.getPosition() < stage2Height) {
-          if (m_lEncoder.getPosition() > stage2Height - 5) {
-            m_lMotor.set(MathUtil.applyDeadband(elevatorSpeed * ((stage2Height - m_lEncoder.getPosition())/5), 0.05));
-            m_rMotor.set(-MathUtil.applyDeadband(elevatorSpeed * ((stage2Height - m_lEncoder.getPosition())/5), 0.05));
-          }
-          else {
-            m_lMotor.set(elevatorSpeed);
-            m_rMotor.set(-elevatorSpeed);
-          }
-        } 
-        else if (m_lEncoder.getPosition() > stage2Height) {
-          if (m_lEncoder.getPosition() < stage2Height + 5) {
-            m_lMotor.set(-MathUtil.applyDeadband(elevatorSpeed * ((m_lEncoder.getPosition() - stage2Height)/5), 0.05));
-            m_rMotor.set(MathUtil.applyDeadband(elevatorSpeed * ((m_lEncoder.getPosition() - stage2Height)/5), 0.1));
-          }
-          else {
-            m_lMotor.set(-elevatorSpeed);
-            m_rMotor.set(elevatorSpeed);
-          }
-        }
-      }
-
-      else if (stage == 3) {
-        if (m_lEncoder.getPosition() < stage3Height) {
-          if (m_lEncoder.getPosition() > stage3Height - 5) {
-            m_lMotor.set(MathUtil.applyDeadband(elevatorSpeed * ((stage3Height - m_lEncoder.getPosition())/5), 0.05));
-            m_rMotor.set(-MathUtil.applyDeadband(elevatorSpeed * ((stage3Height - m_lEncoder.getPosition())/5), 0.05));
-          }
-          else {
-            m_lMotor.set(elevatorSpeed);
-            m_rMotor.set(-elevatorSpeed);
-          }
-        } 
-        else if (m_lEncoder.getPosition() > stage3Height) {
-          if (m_lEncoder.getPosition() < stage3Height + 5) {
-            m_lMotor.set(-MathUtil.applyDeadband(elevatorSpeed * ((m_lEncoder.getPosition() - stage3Height)/5), 0.05));
-            m_rMotor.set(MathUtil.applyDeadband(elevatorSpeed * ((m_lEncoder.getPosition() - stage3Height)/5), 0.05));
-          }
-          else {
-            m_lMotor.set(-elevatorSpeed);
-            m_rMotor.set(elevatorSpeed);
-          }
-        }
-      } 
     }
   }
 }

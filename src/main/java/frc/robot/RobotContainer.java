@@ -167,10 +167,10 @@ public class RobotContainer {
     manipulatorMinusButton.whileTrue(new RunCommand(() -> m_climb.rotate(-0.3)));
     manipulatorMinusButton.onFalse(new InstantCommand(() -> m_climb.rotate(0)));
     
-    manipulatorYButton.onTrue(new InstantCommand(() -> m_elevator.setStage(0)));
-    manipulatorBButton.onTrue(new InstantCommand(() -> m_elevator.setStage(1)));
-    manipulatorAButton.onTrue(new InstantCommand(() -> m_elevator.setStage(2)));
-    manipulatorXButton.onTrue(new InstantCommand(() -> m_elevator.setStage(3)));
+    manipulatorYButton.onTrue(new InstantCommand(() -> m_elevator.setPreset(0)));
+    manipulatorBButton.onTrue(new InstantCommand(() -> m_elevator.setPreset(1)));
+    manipulatorAButton.onTrue(new InstantCommand(() -> m_elevator.setPreset(2)));
+    manipulatorXButton.onTrue(new InstantCommand(() -> m_elevator.setPreset(3)));
 
     manipulatorLeftShoulder.whileTrue(new RunCommand(() -> m_elevator.ascend(0.1)));
     manipulatorLeftShoulder.onFalse(new InstantCommand(() -> m_elevator.ascend(0)));

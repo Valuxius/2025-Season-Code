@@ -36,14 +36,14 @@ public final class Constants {
     public static final double kDriveP = .03; 
     public static final double kDriveI = 0; 
     public static final double kDriveD = 0.0003; 
-    public static final double kDriveFF = 1 / kDriveWheelFreeSpeedRps; 
+    public static final double kDriveFF = 0; //1 / kDriveWheelFreeSpeedRps; 
     public static final double kDriveMinOutput = -1; 
     public static final double kDriveMaxOutput = 1; 
 
     //gains for turn motor PID (defaults)
     public static final double kTurnP = 0.8; 
-    public static final double kTurnI = 0.001;
-    public static final double kTurnD = 0.01;
+    public static final double kTurnI = 0.0;
+    public static final double kTurnD = 0.0;
     public static final double kTurnFF = 0;
     public static final double kTurnMinOutput = -1;
     public static final double kTurnMaxOutput = 1;
@@ -55,7 +55,7 @@ public final class Constants {
 
     //gains for elevator motor PID (defaults)
     public static final double kElevatorP = 0.3;
-    public static final double kElevatorI = 0.004;
+    public static final double kElevatorI = 0.006;
     public static final double kElevatorD = 0;
 
     //gains for shooter motor PID (defaults)

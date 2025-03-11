@@ -83,17 +83,13 @@ public final class MotorConfigs {
             .idleMode(IdleMode.kBrake);
         
         m_elevatorConfig.closedLoop
-            .pid(RobotConstants.kElevatorP, RobotConstants.kElevatorI, RobotConstants.kElevatorD)
-            .positionWrappingEnabled(true)
-            .positionWrappingInputRange(0.0, 2 * Math.PI);
+            .pid(RobotConstants.kElevatorP, RobotConstants.kElevatorI, RobotConstants.kElevatorD);
 
         //the lines below configure the SparkMaxConfig object for the shooter motor
         m_shooterConfig
             .idleMode(IdleMode.kBrake);
         
         m_shooterConfig.closedLoop
-            .pid(RobotConstants.kShooterP, RobotConstants.kShooterI, RobotConstants.kShooterD)
-            .positionWrappingEnabled(true)
-            .positionWrappingInputRange(0.0, 2 * Math.PI);
+            .pid(RobotConstants.kShooterP, RobotConstants.kShooterI, RobotConstants.kShooterD);
     }
 }
