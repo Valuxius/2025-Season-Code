@@ -183,9 +183,6 @@ public class ElevatorSubsystem extends SubsystemBase {
   // This method will be called once per scheduler run
   @Override
   public void periodic() {
-    //sets the PID references to the encoder position
-    m_lPID.setReference(m_lEncoder.getPosition(), ControlType.kPosition);
-    m_rPID.setReference(m_rEncoder.getPosition(), ControlType.kPosition);
     SmartDashboard.putNumber("Preset", preset);
     
     //puts encoder position on SmartDashboard for troubleshooting
@@ -215,13 +212,13 @@ public class ElevatorSubsystem extends SubsystemBase {
         }
       } 
       else if (m_lEncoder.getPosition() > height) {
-        if (m_lEncoder.getPosition() < 5 && height == 0) {
+        if (m_lEncoder.getPosition() < 2 && height == 0) {
           m_lMotor.set(-0.1);
           m_rMotor.set(0.1);
         }
         else if (m_lEncoder.getPosition() < height + 5) {
-          m_lMotor.set(-MathUtil.applyDeadband((elevatorSpeed-0.1) * ((m_lEncoder.getPosition() - height)/5) + 0.1, 0.05));
-          m_rMotor.set(MathUtil.applyDeadband((elevatorSpeed-0.1) * ((m_lEncoder.getPosition() - height)/5) + 0.1, 0.05));
+          m_lMotor.set(-MathUtil.applyDeadband((elevatorSpeed) * ((m_lEncoder.getPosition() - height)/5), 0.05));
+          m_rMotor.set(MathUtil.applyDeadband((elevatorSpeed) * ((m_lEncoder.getPosition() - height)/5), 0.05));
         }
         else {
           m_lMotor.set(-elevatorSpeed);
@@ -231,6 +228,13 @@ public class ElevatorSubsystem extends SubsystemBase {
           resetEncoders();
         }
       }
+      m_lPID.setReference(height, ControlType.kPosition);
+      m_rPID.setReference(height, ControlType.kPosition);
+    }
+
+    else {
+      m_lPID.setReference(m_lEncoder.getPosition(), ControlType.kPosition);
+      m_rPID.setReference(m_rEncoder.getPosition(), ControlType.kPosition);
     }
   }
 }

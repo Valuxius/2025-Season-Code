@@ -17,12 +17,14 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.subsystems.ClimbSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.swerve.DriveSubsystem;
+import frc.robot.utils.AnalogTrigger;
 import frc.robot.utils.LimelightHelpers;
 
 public class RobotContainer {
@@ -157,6 +159,8 @@ public class RobotContainer {
     Trigger manipulatorRightJoystick = new JoystickButton(
       m_manipulatorController, 
       RobotConstants.kManipulatorRightJoystick);
+    Trigger manipulatorUp = new POVButton(m_manipulatorController, 0);
+    Trigger manipulatorLeftTrigger = new AnalogTrigger(m_manipulatorController, RobotConstants.kManipulatorLeftTriggerAxis, 0.1);
 
     //binding buttons to controls  
     driverBButton.onTrue(m_drive.resetGyro()); //reset gyro button
@@ -181,6 +185,8 @@ public class RobotContainer {
     manipulatorLeftJoystick.onFalse(new InstantCommand(() -> m_shooter.rotate(-0.0)));
     manipulatorRightJoystick.whileTrue(new RunCommand(() -> m_shooter.rotate(-0.1)));
     manipulatorRightJoystick.onFalse(new InstantCommand(() -> m_shooter.rotate(-0.0)));
+
+
     
 
     //test
