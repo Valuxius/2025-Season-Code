@@ -9,21 +9,22 @@ import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
-public class Level2Coral extends Command {
+public class HumanPlayer extends Command {
   private final ElevatorSubsystem m_elevator;
   private final ShooterSubsystem m_shooter;
-  /** Creates a new Level2Coral. */
-  public Level2Coral(ElevatorSubsystem m_elevator, ShooterSubsystem m_shooter) {
+  /** Creates a new Level1Coral. */
+  public HumanPlayer(ElevatorSubsystem m_elevator, ShooterSubsystem m_shooter) {
     this.m_elevator = m_elevator;
     this.m_shooter = m_shooter;
+    // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(this.m_elevator, this.m_shooter);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    m_elevator.setPreset(2);
-    m_shooter.setPreset(4);
+    m_elevator.setPreset(8);
+    m_shooter.setPreset(5);
   }
 
   // Called every time the scheduler runs while the command is scheduled.

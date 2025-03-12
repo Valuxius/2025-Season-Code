@@ -13,6 +13,7 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.MotorConfigs;
 
@@ -38,6 +39,7 @@ public class ShooterSubsystem extends SubsystemBase {
   private double floorPreset = 8;
   private double coralPreset = 11;
   private double humanPlayerPreset = 2;
+  private double processorPreset = 8;
 
   //speed variable
   private double speed = 0.1;
@@ -137,7 +139,8 @@ public class ShooterSubsystem extends SubsystemBase {
       else if (preset == 3) rotation = floorPreset;
       else if (preset == 4) rotation = coralPreset;
       else if (preset == 5) rotation = humanPlayerPreset;
-
+      else if (preset == 6) rotation = processorPreset;
+      /* 
       if (m_rotationEncoder.getPosition() < rotation) {
         if (m_rotationEncoder.getPosition() > rotation - 2) {
           m_rotationMotor.set(MathUtil.applyDeadband(speed * ((rotation - m_rotationEncoder.getPosition())/2), 0.05));
@@ -153,12 +156,14 @@ public class ShooterSubsystem extends SubsystemBase {
         else {
           m_rotationMotor.set(-speed);
         }
-      }
+      }*/
       m_rotationPID.setReference(rotation, ControlType.kPosition);
     }
 
     else {
       m_rotationPID.setReference(m_rotationEncoder.getPosition(), ControlType.kPosition);
     }
+    
+    SmartDashboard.putNumber("Shooter Encoder", m_shooterEncoder.getPosition());
   }
 }

@@ -19,7 +19,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
  */
 public final class Constants {
   public static class RobotConstants { 
-    public static final double kMaxSpeedMetersPerSecond = 3; //4.3 
+    public static final double kMaxSpeedMetersPerSecond = 3; //4.3 (recommended max from Jackie: 3)
     public static final double kMaxAccelerationMetersPerSecond = 4.3; //theoretical max
     public static final double kMaxAngularSpeed = 2 * Math.PI; //radians per sec 
     public static final double kMaxAngularAcceleration = 2 * Math.PI; // radians per second per second
@@ -54,14 +54,14 @@ public final class Constants {
     public static final double kClimbD = 0;
 
     //gains for elevator motor PID (defaults)
-    public static final double kElevatorP = 0.3;
-    public static final double kElevatorI = 0.008;
-    public static final double kElevatorD = 0;
+    public static final double kElevatorP = 0.015;
+    public static final double kElevatorI = 0.000005;
+    public static final double kElevatorD = 0.002;
 
     //gains for shooter motor PID (defaults)
-    public static final double kShooterP = 0.1;
-    public static final double kShooterI = 0.004;
-    public static final double kShooterD = 0;
+    public static final double kShooterP = 0.005;
+    public static final double kShooterI = 0;
+    public static final double kShooterD = 0.002;
 
     //drive motor ports 
     public static final int kFrontLeftDriveMotorPort = 4;
@@ -123,12 +123,19 @@ public final class Constants {
     public static final int kManipulatorLeftJoystick = 9;
     public static final int kManipulatorRightJoystick = 10;
 
+
     //shift in motors to temporarily test robot without having to recalibrate
     //set to 0 after calibration
     public static final double kFrontLeftOffset = 0;
     public static final double kBackLeftOffset = 0;
     public static final double kFrontRightOffset = 0;
     public static final double kBackRightOffset = 0;
+
+    //POV angles for the DPad
+    public static final int kPOVUp = 0;
+    public static final int kPOVRight = 90;
+    public static final int kPOVDown = 180;
+    public static final int kPOVLeft = 270;
 
     //slew rate helps stop wheel failure
     public static final double kDirectionSlewRate = 1.2; // radians per second

@@ -183,7 +183,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   // This method will be called once per scheduler run
   @Override
   public void periodic() {
-    SmartDashboard.putNumber("Preset", preset);
+    //sets the PID references to the encoder position
     
     //puts encoder position on SmartDashboard for troubleshooting
     SmartDashboard.putNumber("Elevator Encoder", m_lEncoder.getPosition());
@@ -201,6 +201,7 @@ public class ElevatorSubsystem extends SubsystemBase {
       else if (preset == 9) height = maxHeight; ///processor height
       
       //running the presets
+      /* 
       if (m_lEncoder.getPosition() < height) {
         if (m_lEncoder.getPosition() > height - 5 && m_lEncoder.getPosition() < height-1) {
           m_lMotor.set(MathUtil.applyDeadband((elevatorSpeed) * ((height - m_lEncoder.getPosition())/5), 0.05));
@@ -228,10 +229,10 @@ public class ElevatorSubsystem extends SubsystemBase {
           resetEncoders();
         }
       }
+      */
       m_lPID.setReference(height, ControlType.kPosition);
-      m_rPID.setReference(height, ControlType.kPosition);
+      m_rPID.setReference(-height, ControlType.kPosition);
     }
-
     else {
       m_lPID.setReference(m_lEncoder.getPosition(), ControlType.kPosition);
       m_rPID.setReference(m_rEncoder.getPosition(), ControlType.kPosition);
