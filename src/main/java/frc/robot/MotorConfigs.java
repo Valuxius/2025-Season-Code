@@ -34,9 +34,9 @@ public final class MotorConfigs {
 
         //the lines below configure the SparkMaxConfig object for the drive motor
         m_driveConfig
-            .idleMode(IdleMode.kBrake) //sets drive motor's idle mode into brake mode (locked in place)
+            .idleMode(IdleMode.kCoast) //sets drive motor's idle mode into brake mode (locked in place)
             .smartCurrentLimit(RobotConstants.kDriveCurrentLimit); //limits the current that can be going through the drive motor
-            
+
         m_driveConfig.encoder //configures the drive encoders
             .positionConversionFactor(RobotConstants.kDriveEncoderPositionFactor) //sets a conversion factor for position of the encoder
             .velocityConversionFactor(RobotConstants.kDriveEncoderVelocityFactor); //sets a conversion factor for velocity of the encoder
@@ -53,7 +53,7 @@ public final class MotorConfigs {
             
         //the lines below configure the turn motor    
         m_turnConfig
-            .idleMode(IdleMode.kCoast) //sets turn motor's idle mode into coast mode (free moving)
+            .idleMode(IdleMode.kCoast) //sets turn motor's idle mode into  mode (free moving)
             .smartCurrentLimit(RobotConstants.kTurnCurrentLimit); //limits the current that can be going through the turn motor
 
         m_turnConfig.absoluteEncoder //configures the turn encoders

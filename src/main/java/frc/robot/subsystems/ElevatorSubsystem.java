@@ -16,6 +16,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.MotorConfigs;
+import frc.robot.utils.TrapezoidalPositionControl;
 
 public class ElevatorSubsystem extends SubsystemBase {
   //initializing the motors
@@ -41,7 +42,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   private double stage1Height = 12.5; //L1 Coral Height
   private double stage2Height = 27; //L2 Coral Height
   private double stage3Height = 41; //L3 Coral Height
-  private double maxHeight = 48; //Max Height
+  private double maxHeight = 43; //Max Height
 
   private double floorAlgaeHeight = 10; //Floor Algae Height
   private double l1AlgaeHeight = 0; //L1 Algae Height
@@ -52,10 +53,14 @@ public class ElevatorSubsystem extends SubsystemBase {
   private double humanPlayerHeight = 14; //Human Player Height
 
   //speed for presets (0 - 1)
-  private double elevatorSpeed = 0.3;
+  private double elevatorSpeed = 0.6;
+
+  private final TrapezoidalPositionControl m_heightProfile;
 
   /** Creates a new ElevatorSubsystem. */
   public ElevatorSubsystem(int p_leftID, int p_rightID) {
+    m_heightProfile = new TrapezoidalPositionControl(20, 1);
+
     //creating the motors for the subsystem
     m_lMotor = new SparkMax(p_leftID, MotorType.kBrushless);
     m_rMotor = new SparkMax(p_rightID, MotorType.kBrushless);
@@ -201,8 +206,8 @@ public class ElevatorSubsystem extends SubsystemBase {
       else if (preset == 9) height = maxHeight; ///processor height
       
       //running the presets
-      /* 
-      if (m_lEncoder.getPosition() < height) {
+       
+      /*if (m_lEncoder.getPosition() < height) {
         if (m_lEncoder.getPosition() > height - 5 && m_lEncoder.getPosition() < height-1) {
           m_lMotor.set(MathUtil.applyDeadband((elevatorSpeed) * ((height - m_lEncoder.getPosition())/5), 0.05));
           m_rMotor.set(-MathUtil.applyDeadband((elevatorSpeed) * ((height - m_lEncoder.getPosition())/5), 0.05));
@@ -229,13 +234,18 @@ public class ElevatorSubsystem extends SubsystemBase {
           resetEncoders();
         }
       }
-      */
-      m_lPID.setReference(height, ControlType.kPosition);
-      m_rPID.setReference(-height, ControlType.kPosition);
+        */
+        
+      
+      m_lPID.setReference(m_heightProfile.getSetpoint(height, m_lEncoder.getPosition()), ControlType.kMAXMotionPositionControl);
+      m_rPID.setReference(m_heightProfile.getSetpoint(-height, m_rEncoder.getPosition()), ControlType.kMAXMotionPositionControl);
     }
     else {
       m_lPID.setReference(m_lEncoder.getPosition(), ControlType.kPosition);
       m_rPID.setReference(m_rEncoder.getPosition(), ControlType.kPosition);
     }
+    SmartDashboard.putNumber("PID", m_heightProfile.getSetpoint(height, m_lEncoder.getPosition()));
+    SmartDashboard.putNumber("Left Integral Windup", m_lPID.getIAccum());
+    SmartDashboard.putNumber("Right Integral Windup", m_rPID.getIAccum());
   }
 }

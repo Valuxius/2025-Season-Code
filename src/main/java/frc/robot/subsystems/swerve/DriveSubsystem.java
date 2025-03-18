@@ -260,8 +260,9 @@ public class DriveSubsystem extends SubsystemBase {
       m_gyro.getRotation2d(), 
       getPositions()
     );
-
-    SmartDashboard.putNumber("Limelight", LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[0]);
+    if (LimelightHelpers.getTargetPose_RobotSpace("limelight-front").length != 0) {
+      SmartDashboard.putNumber("Limelight", LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[0]);
+    }
     
     //boolean variable for whether limelight data is accurate or not. if data is inaccurate, rejects limelight pose update
     boolean doRejectUpdate = false;

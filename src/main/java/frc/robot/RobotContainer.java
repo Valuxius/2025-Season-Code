@@ -212,15 +212,15 @@ public class RobotContainer {
           }, 
           m_drive));
 
-    driverLeftTrigger.whileTrue(new InstantCommand(() -> m_shooter.shoot(-0.3)));
-    driverLeftTrigger.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
-    driverRightTrigger.whileTrue(new InstantCommand(() -> m_shooter.shoot(0.3)));
-    driverRightTrigger.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
+    manipulatorBButton.whileTrue(new InstantCommand(() -> m_shooter.shoot(-0.3)));
+    manipulatorBButton.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
+    manipulatorAButton.whileTrue(new InstantCommand(() -> m_shooter.shoot(0.3)));
+    manipulatorAButton.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
 
-    driverLeftShoulder.whileTrue(new InstantCommand(() -> m_shooter.shoot(-1)));
-    driverLeftShoulder.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
-    driverRightShoulder.whileTrue(new InstantCommand(() -> m_shooter.shoot(1)));
-    driverRightShoulder.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
+    manipulatorLeftShoulder.whileTrue(new InstantCommand(() -> m_shooter.shoot(-1)));
+    manipulatorLeftShoulder.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
+    manipulatorRightShoulder.whileTrue(new InstantCommand(() -> m_shooter.shoot(1)));
+    manipulatorRightShoulder.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
     
     manipulatorRightTrigger.whileTrue(new RunCommand(() -> m_elevator.ascend(0.3)));
     manipulatorRightTrigger.onFalse(new InstantCommand(() -> m_elevator.ascend(0)));
@@ -236,13 +236,8 @@ public class RobotContainer {
     manipulatorDPadLeft.onFalse(new InstantCommand(() -> m_climb.rotate(0)));
     manipulatorDPadRight.whileTrue(new RunCommand(() -> m_climb.rotate(-0.3)));
     manipulatorDPadRight.onFalse(new InstantCommand(() -> m_climb.rotate(0)));
-  
 
-    //test
-
-
-    
-
+    driverDPadDown.onTrue(new InstantCommand(() -> m_elevator.setPreset(1)));
   }
 
   /**

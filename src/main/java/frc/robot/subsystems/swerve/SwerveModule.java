@@ -13,8 +13,11 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import frc.robot.MotorConfigs;
+import frc.robot.utils.TrapezoidalVelocityControl;
 
 public class SwerveModule {
+    private final TrapezoidalVelocityControl m_driveProfile;
+    
     //initializing the motors
     private final SparkMax m_driveMotor;
     private final SparkMax m_turnMotor;
@@ -31,6 +34,8 @@ public class SwerveModule {
     private SwerveModuleState m_desiredState = new SwerveModuleState(0.0, new Rotation2d()); //sets the swerve module's velocity to 0 and the angle to 0 when the code is initialized
 
     public SwerveModule(int p_driveID, int p_turnID, double p_angleOffset) {
+        m_driveProfile = new TrapezoidalVelocityControl(56, 56);
+
         //setting drive and turn motors for each swerve module
         m_driveMotor = new SparkMax(p_driveID, MotorType.kBrushless);
         m_turnMotor = new SparkMax(p_turnID, MotorType.kBrushless);
@@ -102,7 +107,7 @@ public class SwerveModule {
         correctedDesiredState.optimize(new Rotation2d(m_turnEncoder.getPosition()));
 
         //sets the state of the module to the state we created
-        m_drivePID.setReference(correctedDesiredState.speedMetersPerSecond, ControlType.kVelocity);
+        m_drivePID.setReference(m_driveProfile.getSetpoint(correctedDesiredState.speedMetersPerSecond, m_driveEncoder.getVelocity()), ControlType.kVelocity);
         m_turnPID.setReference(correctedDesiredState.angle.getRadians(), ControlType.kPosition);
 
         m_desiredState = desiredState;
