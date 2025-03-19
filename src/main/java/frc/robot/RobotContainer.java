@@ -57,6 +57,7 @@ public class RobotContainer {
     NamedCommands.registerCommand("Reset Gyro", new InstantCommand(() -> m_drive.resetGyro(), m_drive));
     NamedCommands.registerCommand("Rumble On", new InstantCommand(() -> m_driverController.setRumble(RumbleType.kBothRumble, 1)));
     NamedCommands.registerCommand("Rumble Off", new InstantCommand(() -> m_driverController.setRumble(RumbleType.kBothRumble, 0)));
+    NamedCommands.registerCommand("Level 3 Elevator", new InstantCommand(() -> m_elevator.setPreset(3)));
 
     //binds controller buttons to commands
     configureBindings();
