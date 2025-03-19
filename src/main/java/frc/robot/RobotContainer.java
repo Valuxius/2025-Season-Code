@@ -237,7 +237,11 @@ public class RobotContainer {
     manipulatorDPadRight.whileTrue(new RunCommand(() -> m_climb.rotate(-0.3)));
     manipulatorDPadRight.onFalse(new InstantCommand(() -> m_climb.rotate(0)));
 
-    driverDPadDown.onTrue(new InstantCommand(() -> m_elevator.setPreset(1)));
+    driverDPadDown.onTrue(new InstantCommand(() -> m_elevator.setPreset(2)));
+    driverDPadRight.onTrue(new InstantCommand(() -> m_elevator.setPreset(3)));
+    driverDPadUp.onTrue(new InstantCommand(() -> m_elevator.setPreset(0)));
+    driverDPadLeft.onTrue(new InstantCommand(() -> m_elevator.setPreset(1)));
+    driverPlusButton.onTrue(new InstantCommand(() -> m_elevator.setPreset(9)));
   }
 
   /**

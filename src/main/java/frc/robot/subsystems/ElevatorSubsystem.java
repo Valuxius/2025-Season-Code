@@ -5,18 +5,19 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.MotorConfigs;
-import frc.robot.utils.TrapezoidalPositionControl;
+import frc.robot.Constants.RobotConstants;
 
 public class ElevatorSubsystem extends SubsystemBase {
   //initializing the motors
@@ -25,11 +26,13 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   //initializing the encoders
   private final RelativeEncoder m_lEncoder;
-  private final RelativeEncoder m_rEncoder;
 
-  //initializing the PID controllers (disabled for now)
-  private final SparkClosedLoopController m_lPID;
-  private final SparkClosedLoopController m_rPID;
+  private final TrapezoidProfile.Constraints constraints;
+  private TrapezoidProfile.State goalState;
+  private TrapezoidProfile.State currentState;
+  private final TrapezoidProfile profile;
+
+  private double currentPos;
 
   //variables for the presets
   private double preset = 0;
@@ -39,10 +42,11 @@ public class ElevatorSubsystem extends SubsystemBase {
   private double height = 0;
   
   //heights for presets
-  private double stage1Height = 12.5; //L1 Coral Height
-  private double stage2Height = 27; //L2 Coral Height
-  private double stage3Height = 41; //L3 Coral Height
-  private double maxHeight = 43; //Max Height
+  //IMPORTANT FOR LATER - OFFSET +0.5 FOR DEADBAND
+  private double stage1Height = 4; //L1 Coral Height
+  private double stage2Height = 17; //L2 Coral Height
+  private double stage3Height = 31; //L3 Coral Height
+  private double maxHeight = 40.5; //Max Height
 
   private double floorAlgaeHeight = 10; //Floor Algae Height
   private double l1AlgaeHeight = 0; //L1 Algae Height
@@ -54,32 +58,49 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   //speed for presets (0 - 1)
   private double elevatorSpeed = 0.6;
+  
+  private final ProfiledPIDController m_PID;
 
-  private final TrapezoidalPositionControl m_heightProfile;
+  /*public enum ElevatorPosition {
+    DOWN(0),
+    STAGE_1(ElevatorConstants.L1),
+    STAGE_2(ElevatorConstants.L2),
+    STAGE_3(ElevatorConstants.L3),
+    POSITION_4(ElevatorConstants.L4);
+
+    public final double positionInches;
+    
+    ElevatorPosition(double positionInches) {
+        this.positionInches = positionInches;
+    }
+}*/
 
   /** Creates a new ElevatorSubsystem. */
   public ElevatorSubsystem(int p_leftID, int p_rightID) {
-    m_heightProfile = new TrapezoidalPositionControl(20, 1);
-
     //creating the motors for the subsystem
     m_lMotor = new SparkMax(p_leftID, MotorType.kBrushless);
     m_rMotor = new SparkMax(p_rightID, MotorType.kBrushless);
 
     //creating the encoders for the subsystem
     m_lEncoder = m_lMotor.getEncoder();
-    m_rEncoder = m_rMotor.getEncoder();
-
-    //creating the PID controllers (disabled for now)
-    m_lPID = m_lMotor.getClosedLoopController();
-    m_rPID = m_rMotor.getClosedLoopController();
 
     //resets the encoders
     m_lEncoder.setPosition(0);
-    m_rEncoder.setPosition(0);
 
     //configures the motors with PID controls
     m_lMotor.configure(MotorConfigs.m_elevatorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-    m_rMotor.configure(MotorConfigs.m_elevatorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+    SparkMaxConfig m_rConfig = MotorConfigs.m_elevatorConfig;
+    m_rConfig.follow(RobotConstants.kLeftElevatorMotorPort, true);
+
+    m_rMotor.configure(m_rConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+    constraints = new TrapezoidProfile.Constraints(15, 30);
+    m_PID = new ProfiledPIDController(
+      RobotConstants.kElevatorP, RobotConstants.kElevatorI, RobotConstants.kElevatorD, constraints, 0.02);
+    currentState = new TrapezoidProfile.State(0, 0);
+    goalState = new TrapezoidProfile.State(0, 0);
+    profile = new TrapezoidProfile(constraints);
   }
 
   /**
@@ -88,6 +109,11 @@ public class ElevatorSubsystem extends SubsystemBase {
    * @param speed Speed of ascent, 0 - 1
    */
   public void ascend(double speed) {
+    preset = 10;
+    m_PID.reset(m_lEncoder.getPosition());
+    currentState = new TrapezoidProfile.State(m_lEncoder.getPosition(), 0);
+    goalState = new TrapezoidProfile.State(m_lEncoder.getPosition(), 0);
+    height = m_lEncoder.getPosition();
     lock = false; //set to false to allow free moving
     double newSpeed = speed; //creates new variable for adjusted speed
 
@@ -100,7 +126,6 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     //sets the motor speeds
     m_lMotor.set(MathUtil.applyDeadband(newSpeed, 0.1));
-    m_rMotor.set(-MathUtil.applyDeadband(newSpeed, 0.1));
 
     //posts the data to SmartDashboard (for troubleshooting)
     SmartDashboard.putNumber("Speed", newSpeed);
@@ -112,6 +137,11 @@ public class ElevatorSubsystem extends SubsystemBase {
    * @param speed Speed of descent, 0 - 1
    */
   public void descend(double speed) {
+    preset = 10;
+    m_PID.reset(m_lEncoder.getPosition());
+    currentState = new TrapezoidProfile.State(m_lEncoder.getPosition(), 0);
+    goalState = new TrapezoidProfile.State(m_lEncoder.getPosition(), 0);
+    height = m_lEncoder.getPosition();
     lock = false; //set to false to allow free moving
     double newSpeed = speed; //creates new variable for adjusted speed
 
@@ -125,7 +155,6 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     //sets motor speeds
     m_lMotor.set(-newSpeed);
-    m_rMotor.set(newSpeed);
 
     //puts data on SmartDashboard for troubleshoooting
     SmartDashboard.putNumber("Speed", newSpeed);
@@ -139,32 +168,25 @@ public class ElevatorSubsystem extends SubsystemBase {
   public void setPreset(double preset) {
     lock = true;
     if (preset >= 0) this.preset = preset;
+
+    //setting the height
+    if (preset == 0) height = 0; //starting height
+    else if (preset == 1) height = stage1Height; //L1 coral height
+    else if (preset == 2) height = stage2Height; //L2 coral height
+    else if (preset == 3) height = stage3Height; //L3 coral height
+    else if (preset == 4) height = floorAlgaeHeight; //floor algae height
+    else if (preset == 5) height = l1AlgaeHeight; //L1 algae height
+    else if (preset == 6) height = l2AlgaeHeight; //L2 algae height
+    else if (preset == 7) height = processorHeight; //processor height
+    else if (preset == 8) height = humanPlayerHeight; //human player height
+    else if (preset == 9) height = maxHeight; ///processor height
   }
 
   /**
    * Resets the elevator encoders.
    */
-  public void resetEncoders() {
+  public void resetEncoder() {
     m_lEncoder.setPosition(0);
-    m_rEncoder.setPosition(0);
-  }
-
-  /**
-   * Gets the left elevator PID controller.
-   * 
-   * @return Left elevator PID
-   */
-  public SparkClosedLoopController getLeftPID() {
-    return m_lPID;
-  }
-
-  /**
-   * Gets the right elevator PID controler.
-   * 
-   * @return Right elevator PID
-   */
-  public SparkClosedLoopController getRightPID() {
-    return m_rPID;
   }
 
   /**
@@ -185,67 +207,38 @@ public class ElevatorSubsystem extends SubsystemBase {
     return m_lEncoder;
   }
 
+  public double calculateFF(TrapezoidProfile.State state) {
+    return RobotConstants.kElevatorS * Math.signum(state.velocity) +
+           RobotConstants.kElevatorG +
+           RobotConstants.kElevatorV * state.velocity;
+  }
   // This method will be called once per scheduler run
   @Override
   public void periodic() {
-    //sets the PID references to the encoder position
+    currentPos = m_lEncoder.getPosition();
     
+    currentState = profile.calculate(0.02, currentState, goalState);
     //puts encoder position on SmartDashboard for troubleshooting
     SmartDashboard.putNumber("Elevator Encoder", m_lEncoder.getPosition());
-    if (lock) {
-      //setting the height
-      if (preset == 0) height = 0; //starting height
-      else if (preset == 1) height = stage1Height; //L1 coral height
-      else if (preset == 2) height = stage2Height; //L2 coral height
-      else if (preset == 3) height = stage3Height; //L3 coral height
-      else if (preset == 4) height = floorAlgaeHeight; //floor algae height
-      else if (preset == 5) height = l1AlgaeHeight; //L1 algae height
-      else if (preset == 6) height = l2AlgaeHeight; //L2 algae height
-      else if (preset == 7) height = processorHeight; //processor height
-      else if (preset == 8) height = humanPlayerHeight; //human player height
-      else if (preset == 9) height = maxHeight; ///processor height
-      
-      //running the presets
-       
-      /*if (m_lEncoder.getPosition() < height) {
-        if (m_lEncoder.getPosition() > height - 5 && m_lEncoder.getPosition() < height-1) {
-          m_lMotor.set(MathUtil.applyDeadband((elevatorSpeed) * ((height - m_lEncoder.getPosition())/5), 0.05));
-          m_rMotor.set(-MathUtil.applyDeadband((elevatorSpeed) * ((height - m_lEncoder.getPosition())/5), 0.05));
-        }
-        else {
-          m_lMotor.set(elevatorSpeed);
-          m_rMotor.set(-elevatorSpeed);
-        }
-      } 
-      else if (m_lEncoder.getPosition() > height) {
-        if (m_lEncoder.getPosition() < 2 && height == 0) {
-          m_lMotor.set(-0.1);
-          m_rMotor.set(0.1);
-        }
-        else if (m_lEncoder.getPosition() < height + 5) {
-          m_lMotor.set(-MathUtil.applyDeadband((elevatorSpeed) * ((m_lEncoder.getPosition() - height)/5), 0.05));
-          m_rMotor.set(MathUtil.applyDeadband((elevatorSpeed) * ((m_lEncoder.getPosition() - height)/5), 0.05));
-        }
-        else {
-          m_lMotor.set(-elevatorSpeed);
-          m_rMotor.set(elevatorSpeed);
-        }
-        if (m_lEncoder.getVelocity() >= -0.03 && m_lEncoder.getPosition() < 3 && height == 0) {
-          resetEncoders();
-        }
-      }
-        */
-        
-      
-      m_lPID.setReference(m_heightProfile.getSetpoint(height, m_lEncoder.getPosition()), ControlType.kMAXMotionPositionControl);
-      m_rPID.setReference(m_heightProfile.getSetpoint(-height, m_rEncoder.getPosition()), ControlType.kMAXMotionPositionControl);
+    
+    goalState = new TrapezoidProfile.State(height, 0);
+    m_PID.setTolerance(0.25);
+    double output = m_PID.calculate(m_lEncoder.getPosition(), currentState.position);
+    double ff = calculateFF(currentState);
+    if (m_lEncoder.getPosition() < 9 && currentState.velocity < 0 && height == 0) {
+      m_lMotor.set(-0.75 * m_lEncoder.getPosition()/8);
+    } 
+    else if (Math.abs(m_lEncoder.getPosition() - height) < 3) {
+      m_lMotor.set(MathUtil.applyDeadband(
+        (height > m_lEncoder.getPosition()) ?
+        0.75 * (height - m_lEncoder.getPosition())/3 :
+        -0.75 * (m_lEncoder.getPosition() - height)/3,
+        0.05
+        )
+      );
     }
-    else {
-      m_lPID.setReference(m_lEncoder.getPosition(), ControlType.kPosition);
-      m_rPID.setReference(m_rEncoder.getPosition(), ControlType.kPosition);
-    }
-    SmartDashboard.putNumber("PID", m_heightProfile.getSetpoint(height, m_lEncoder.getPosition()));
-    SmartDashboard.putNumber("Left Integral Windup", m_lPID.getIAccum());
-    SmartDashboard.putNumber("Right Integral Windup", m_rPID.getIAccum());
+    else m_lMotor.set(MathUtil.clamp(output+ff, -0.75, 0.75));
+    SmartDashboard.putNumber("ff", ff);
+    SmartDashboard.putNumber("output", output);
   }
 }

@@ -54,9 +54,13 @@ public final class Constants {
     public static final double kClimbD = 0;
 
     //gains for elevator motor PID (defaults)
-    public static final double kElevatorP = 0.0175;
-    public static final double kElevatorI = 0.003;
+    public static final double kElevatorP = 0;
+    public static final double kElevatorI = 0;
     public static final double kElevatorD = 0;
+    public static final double kElevatorS = 0;
+    public static final double kElevatorG = 0.025;
+    public static final double kElevatorV = 1.0 / 15.0;
+    public static final double kElevatorA = 0;
 
     //gains for shooter motor PID (defaults)
     public static final double kShooterP = 0.005;
