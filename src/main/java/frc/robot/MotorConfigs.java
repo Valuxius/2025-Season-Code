@@ -73,7 +73,8 @@ public final class MotorConfigs {
 
         //the lines below configure the SparkMaxConfig object for the climb motor
         m_climbConfig
-            .idleMode(IdleMode.kBrake);
+            .idleMode(IdleMode.kBrake)
+            .inverted(true);
 
         m_climbConfig.closedLoop
             .pid(RobotConstants.kClimbP, RobotConstants.kClimbI, RobotConstants.kClimbD);
@@ -87,7 +88,9 @@ public final class MotorConfigs {
 
         //the lines below configure the SparkMaxConfig object for the shooter motor
         m_shooterConfig
-            .idleMode(IdleMode.kBrake);
+            .idleMode(IdleMode.kBrake)
+            .inverted(true);
+    
         
         m_shooterConfig.closedLoop
             .pid(RobotConstants.kShooterP, RobotConstants.kShooterI, RobotConstants.kShooterD);

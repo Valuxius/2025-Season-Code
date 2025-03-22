@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkMax;
@@ -13,8 +14,12 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.RobotConstants;
 import frc.robot.MotorConfigs;
 
 public class ShooterSubsystem extends SubsystemBase {
@@ -22,33 +27,35 @@ public class ShooterSubsystem extends SubsystemBase {
   private final SparkMax m_shooterMotor;
   private final SparkMax m_rotationMotor;
 
-  //initializing the encoders
-  private final RelativeEncoder m_shooterEncoder;
+  //initializing the encoder
   private final RelativeEncoder m_rotationEncoder;
 
   //initalizing the PID controllers 
-  private final SparkClosedLoopController m_shooterPID; //disabled for now
-  private final SparkClosedLoopController m_rotationPID;
+  private final ProfiledPIDController m_rotationPID;
+
+  private final TrapezoidProfile.Constraints constraints;
+  private TrapezoidProfile.State goalState;
+  private TrapezoidProfile.State currentState;
+  private final TrapezoidProfile profile;
 
   //variable for preset
   private double preset = 0;
 
   //angle variables (0 should be straight up, increased values bring the shooter down)
-  private double netPreset = 3;
-  private double algaePreset = 3.5;
+  private double netPreset = 9.5;
+  private double algaePreset = 7;
   private double floorPreset = 8;
-  private double coralPreset = 11;
+  private double l1coralPreset = 4;
+  private double l2coralPreset = 2;
+  private double l3coralPreset = 1;
   private double humanPlayerPreset = 2;
-  private double processorPreset = 8;
+  private double processorPreset = 2;
 
   //speed variable
   private double speed = 0.1;
 
   //rotation variable
   private double rotation = 0;
-
-  //lock variable
-  private boolean lock = false; 
 
   /** Creates a new ShooterSubsystem. */
   public ShooterSubsystem(int p_shooterID, int p_rotationID) {
@@ -57,20 +64,32 @@ public class ShooterSubsystem extends SubsystemBase {
     m_rotationMotor = new SparkMax(p_rotationID, MotorType.kBrushless);
 
     //creating the encoders
-    m_shooterEncoder = m_shooterMotor.getEncoder();
     m_rotationEncoder = m_rotationMotor.getEncoder();
 
-    //creating the PID controllers
-    m_shooterPID = m_shooterMotor.getClosedLoopController(); //disabled
-    m_rotationPID = m_rotationMotor.getClosedLoopController();
-
-    //resets the encoder
-    m_shooterEncoder.setPosition(0);
+    //resets the encoders
     m_rotationEncoder.setPosition(0);
+
+    //adds a max velocity and max acceleration (in encoder rotations)
+    constraints = new TrapezoidProfile.Constraints(10, 10);
+
+    //makes a new PID with the trapezoidal constraints
+    m_rotationPID = new ProfiledPIDController(
+      RobotConstants.kShooterP, RobotConstants.kShooterI, RobotConstants.kShooterD, constraints, 0.02);
+
+    m_rotationPID.setIZone(0.25);
+    
+    //default states
+    currentState = new TrapezoidProfile.State(0, 0);
+    goalState = new TrapezoidProfile.State(0, 0);
+    
+    //creates trapezoidal profile to calculate the next step for PID
+    profile = new TrapezoidProfile(constraints);
 
     //configures the PIDs for the motors
     m_shooterMotor.configure(MotorConfigs.m_shooterConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     m_rotationMotor.configure(MotorConfigs.m_shooterConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+    m_rotationPID.setTolerance(0.1);
   }
 
   /**
@@ -83,22 +102,26 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   /**
-   * Sets the shooter at a certain angle.
-   * 
-   * @param angle Angle to be set.
-   */
-  public void setRotation(double angle) {
-    m_rotationMotor.set((angle - m_rotationEncoder.getPosition()) * 0.01);
-  }
-
-  /**
    * Rotates the shooter.
    * 
    * @param speed Speed to rotate at, 0 - 1.
    */
   public void rotate(double speed) {
-    lock = false;
-    m_rotationMotor.set(speed);
+    m_rotationPID.reset(m_rotationEncoder.getPosition());
+    currentState = new TrapezoidProfile.State(m_rotationEncoder.getPosition(), 0);
+    goalState = new TrapezoidProfile.State(m_rotationEncoder.getPosition(), 0);
+
+    rotation = m_rotationEncoder.getPosition();
+
+    double newSpeed = speed;
+
+    if (m_rotationEncoder.getPosition() < 4 && speed < 0) {
+      newSpeed = speed * (m_rotationEncoder.getPosition()/4);
+    } else if (m_rotationEncoder.getPosition() > 7 && speed > 0) {
+      newSpeed = speed * ((11 - m_rotationEncoder.getPosition())/4);
+    }
+
+    m_rotationMotor.set(newSpeed);
   }
 
   /**
@@ -107,17 +130,16 @@ public class ShooterSubsystem extends SubsystemBase {
    * @param preset Preset number
    */
   public void setPreset(int preset) {
-    lock = true;
     this.preset = preset;
-  }
-
-  /**
-   * Gets the shooter's rotation PID controller.
-   * 
-   * @return Rotation PID controler
-   */
-  public SparkClosedLoopController getRotationPID() {
-    return m_rotationPID;
+    if (preset == 0) rotation = 0;
+    else if (preset == 1) rotation = netPreset;
+    else if (preset == 2) rotation = algaePreset;
+    else if (preset == 3) rotation = floorPreset;
+    else if (preset == 4) rotation = l1coralPreset;
+    else if (preset == 5) rotation = l2coralPreset;
+    else if (preset == 6) rotation = l3coralPreset;
+    else if (preset == 7) rotation = humanPlayerPreset;
+    else if (preset == 8) rotation = processorPreset;
   }
 
   /**
@@ -129,41 +151,31 @@ public class ShooterSubsystem extends SubsystemBase {
     return m_rotationEncoder;
   }
 
+  public double calculateFF(TrapezoidProfile.State state) {
+    return RobotConstants.kShooterS * Math.signum(state.velocity) +
+           RobotConstants.kShooterG +
+           RobotConstants.kShooterV * state.velocity;
+  }
+
   // This method will be called once per scheduler run
   @Override
   public void periodic() {
-    if (lock) {
-      if (preset == 0) rotation = 0;
-      else if (preset == 1) rotation = netPreset;
-      else if (preset == 2) rotation = algaePreset;
-      else if (preset == 3) rotation = floorPreset;
-      else if (preset == 4) rotation = coralPreset;
-      else if (preset == 5) rotation = humanPlayerPreset;
-      else if (preset == 6) rotation = processorPreset;
-      /* 
-      if (m_rotationEncoder.getPosition() < rotation) {
-        if (m_rotationEncoder.getPosition() > rotation - 2) {
-          m_rotationMotor.set(MathUtil.applyDeadband(speed * ((rotation - m_rotationEncoder.getPosition())/2), 0.05));
-        }
-        else {
-          m_rotationMotor.set(speed);
-        }
-      }
-      else if (m_rotationEncoder.getPosition() > rotation) {
-        if (m_rotationEncoder.getPosition() < rotation + 2) {
-          m_rotationMotor.set(-MathUtil.applyDeadband(speed * ((m_rotationEncoder.getPosition() - rotation)/2), 0.05));
-        }
-        else {
-          m_rotationMotor.set(-speed);
-        }
-      }*/
-      m_rotationPID.setReference(rotation, ControlType.kPosition);
+    goalState = new TrapezoidProfile.State(rotation, 0);
+    currentState = profile.calculate(0.02, currentState, goalState);
+    double output = m_rotationPID.calculate(m_rotationEncoder.getPosition(), currentState.position);
+    double ff = MathUtil.clamp(calculateFF(currentState), -0.2, 0.2);
+    if (m_rotationEncoder.getPosition() > 10.5) {
+      m_rotationMotor.set(ff * ((11 - m_rotationEncoder.getPosition())/0.5));
     }
-
-    else {
-      m_rotationPID.setReference(m_rotationEncoder.getPosition(), ControlType.kPosition);
+    else if (Math.abs(m_rotationEncoder.getPosition() - rotation) < 1 && currentState.velocity != 0) {
+      m_rotationMotor.set(
+        (rotation > m_rotationEncoder.getPosition()) ?
+        0.2 * (rotation - m_rotationEncoder.getPosition()) + RobotConstants.kShooterG :
+        -0.2 * (m_rotationEncoder.getPosition() - rotation) + RobotConstants.kShooterG
+      );
     }
-    
-    SmartDashboard.putNumber("Shooter Encoder", m_shooterEncoder.getPosition());
+    else m_rotationMotor.set(ff+output);
+    SmartDashboard.putNumber("ShooterEncoder", m_rotationEncoder.getPosition());
+    SmartDashboard.putNumber("ff", ff);
   }
 }

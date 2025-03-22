@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.RobotConstants;
+import frc.robot.commands.Level2Algae;
 import frc.robot.commands.Net;
 import frc.robot.subsystems.ClimbSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
@@ -57,7 +58,12 @@ public class RobotContainer {
     NamedCommands.registerCommand("Reset Gyro", new InstantCommand(() -> m_drive.resetGyro(), m_drive));
     NamedCommands.registerCommand("Rumble On", new InstantCommand(() -> m_driverController.setRumble(RumbleType.kBothRumble, 1)));
     NamedCommands.registerCommand("Rumble Off", new InstantCommand(() -> m_driverController.setRumble(RumbleType.kBothRumble, 0)));
-    NamedCommands.registerCommand("Level 3 Elevator", new InstantCommand(() -> m_elevator.setPreset(3)));
+    NamedCommands.registerCommand("Level 2 Elevator", new InstantCommand(() -> {m_elevator.setPreset(2); m_shooter.setPreset(5);}));
+    NamedCommands.registerCommand("Level 3 Elevator", new InstantCommand(() -> {m_elevator.setPreset(3); m_shooter.setPreset(5);}));
+    NamedCommands.registerCommand("Level 1 Algae", new InstantCommand(() -> {m_elevator.setPreset(5); m_shooter.setPreset(2);}));
+    NamedCommands.registerCommand("Stop Shooter", new InstantCommand(() -> m_shooter.shoot(0)));
+    NamedCommands.registerCommand("Slow Shoot", new InstantCommand(() -> m_shooter.shoot(0.3)));
+    NamedCommands.registerCommand("Fast Intake", new InstantCommand(() -> m_shooter.shoot(-1)));
 
     //binds controller buttons to commands
     configureBindings();
@@ -171,10 +177,10 @@ public class RobotContainer {
        RobotConstants.kManipulatorMinusButton);
     Trigger manipulatorLeftJoystick = new JoystickButton(
       m_manipulatorController, 
-      RobotConstants.kManipulatorPlusButton);
+      RobotConstants.kManipulatorLeftJoystick);
     Trigger manipulatorRightJoystick = new JoystickButton(
       m_manipulatorController,
-       RobotConstants.kManipulatorMinusButton);
+       RobotConstants.kManipulatorRightJoystick);
     Trigger manipulatorDPadUp = new POVButton(
       m_manipulatorController, 
       RobotConstants.kPOVUp);
@@ -206,43 +212,76 @@ public class RobotContainer {
             if (LimelightHelpers.getTargetPose_RobotSpace("limelight-front").length != 0) {
               m_drive.drive(
               squared(-MathUtil.applyDeadband(m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort), .05)),
-              MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[0], -0.25, 0.25), 0.01),
+              (LimelightHelpers.getTV("limelight-front")) ? MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[0]+0.125, -0.25, 0.25), 0.01) : 0,
               MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[4] * 0.01, -0.4, 0.4),0.03), 
               false);
             }
           }, 
           m_drive));
+    driverYButton.whileTrue(
+      new RunCommand(
+          () -> {
+            if (LimelightHelpers.getTargetPose_RobotSpace("limelight-front").length != 0) {
+              m_drive.drive(
+              squared(-MathUtil.applyDeadband(m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort), .05)),
+              (LimelightHelpers.getTV("limelight-front")) ? MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[0]-0.2, -0.25, 0.25), 0.01) : 0,
+              MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[4] * 0.01, -0.4, 0.4),0.03), 
+              false);
+            }
+          }, 
+          m_drive));
+      driverPlusButton.whileTrue(
+        new RunCommand(
+            () -> {
+              if (LimelightHelpers.getTargetPose_RobotSpace("limelight-front").length != 0) {
+                m_drive.drive(
+                squared(-MathUtil.applyDeadband(m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort), .05)),
+                (LimelightHelpers.getTV("limelight-front")) ? MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[0]-0.05, -0.25, 0.25), 0.01) : 0,
+                MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[4] * 0.01, -0.4, 0.4),0.03), 
+                false);
+              }
+            }, 
+            m_drive));
 
-    manipulatorBButton.whileTrue(new InstantCommand(() -> m_shooter.shoot(-0.3)));
-    manipulatorBButton.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
-    manipulatorAButton.whileTrue(new InstantCommand(() -> m_shooter.shoot(0.3)));
-    manipulatorAButton.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
+    // manipulatorLeftTrigger.whileTrue(new InstantCommand(() -> m_shooter.shoot(-0.3)));
+    // manipulatorBButton.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
+    // manipulatorAButton.whileTrue(new InstantCommand(() -> m_shooter.shoot(0.3)));
+    // manipulatorAButton.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
+
+    manipulatorRightJoystick.onTrue(new InstantCommand(() -> {m_elevator.setPreset(5); m_shooter.setPreset(2);}));
+    manipulatorLeftJoystick.onTrue(new InstantCommand(() -> {m_elevator.setPreset(6); m_shooter.setPreset(2);}));
 
     manipulatorLeftShoulder.whileTrue(new InstantCommand(() -> m_shooter.shoot(-1)));
     manipulatorLeftShoulder.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
     manipulatorRightShoulder.whileTrue(new InstantCommand(() -> m_shooter.shoot(1)));
     manipulatorRightShoulder.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
     
-    manipulatorRightTrigger.whileTrue(new RunCommand(() -> m_elevator.ascend(0.3)));
-    manipulatorRightTrigger.onFalse(new InstantCommand(() -> m_elevator.ascend(0)));
-    manipulatorLeftTrigger.whileTrue(new RunCommand(() -> m_elevator.descend(0.3)));
-    manipulatorLeftTrigger.onFalse(new InstantCommand(() -> m_elevator.descend(0)));
+    manipulatorLeftTrigger.whileTrue(new RunCommand(() -> m_shooter.shoot(-0.3)));
+    manipulatorLeftTrigger.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
+    manipulatorRightTrigger.whileTrue(new RunCommand(() -> m_shooter.shoot(0.3)));
+    manipulatorRightTrigger.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
 
-    manipulatorDPadUp.whileTrue(new RunCommand(() -> m_shooter.rotate(-0.1)));
-    manipulatorDPadUp.onFalse(new InstantCommand(() -> m_shooter.rotate(0)));
-    manipulatorDPadDown.whileTrue(new RunCommand(() -> m_shooter.rotate(0.1)));
-    manipulatorDPadDown.onFalse(new InstantCommand(() -> m_shooter.rotate(0)));
+    manipulatorDPadUp.onTrue(new InstantCommand(() -> {m_elevator.setPreset(9); m_shooter.setPreset(1);}));
+    manipulatorDPadDown.onTrue(new InstantCommand(() -> {m_elevator.setPreset(7); m_shooter.setPreset(8);}));
+    manipulatorBButton.onTrue(new InstantCommand(() -> {m_elevator.setPreset(2); m_shooter.setPreset(5);}));
+    manipulatorAButton.onTrue(new InstantCommand(() -> {m_elevator.setPreset(3); m_shooter.setPreset(6);}));
+    manipulatorXButton.onTrue(new InstantCommand(() -> {m_elevator.setPreset(0); m_shooter.setPreset(0);}));
+    manipulatorYButton.onTrue(new InstantCommand(() -> {m_elevator.setPreset(1); m_shooter.setPreset(4);}));
+
+    manipulatorPlusButton.whileTrue(new RunCommand(() -> m_shooter.rotate(0.15), m_shooter));
+    manipulatorPlusButton.onFalse(new InstantCommand(() -> m_shooter.rotate(0)));
+    manipulatorMinusButton.whileTrue(new RunCommand(() -> m_shooter.rotate(-0.15)));
+    manipulatorMinusButton.onFalse(new InstantCommand(() -> m_shooter.rotate(0)));
     
-    manipulatorDPadLeft.whileTrue(new RunCommand(() -> m_climb.rotate(0.3)));
-    manipulatorDPadLeft.onFalse(new InstantCommand(() -> m_climb.rotate(0)));
-    manipulatorDPadRight.whileTrue(new RunCommand(() -> m_climb.rotate(-0.3)));
-    manipulatorDPadRight.onFalse(new InstantCommand(() -> m_climb.rotate(0)));
+    manipulatorDPadLeft.whileTrue(new RunCommand(() -> m_elevator.ascend(0.3), m_elevator));
+    manipulatorDPadLeft.onFalse(new InstantCommand(() -> m_elevator.ascend(0)));
+    manipulatorDPadRight.whileTrue(new RunCommand(() -> m_elevator.descend(0.3), m_elevator));
+    manipulatorDPadRight.onFalse(new InstantCommand(() -> m_elevator.descend(0)));
 
-    driverDPadDown.onTrue(new InstantCommand(() -> m_elevator.setPreset(2)));
-    driverDPadRight.onTrue(new InstantCommand(() -> m_elevator.setPreset(3)));
-    driverDPadUp.onTrue(new InstantCommand(() -> m_elevator.setPreset(0)));
-    driverDPadLeft.onTrue(new InstantCommand(() -> m_elevator.setPreset(1)));
-    driverPlusButton.onTrue(new InstantCommand(() -> m_elevator.setPreset(9)));
+    driverLeftTrigger.whileTrue(new RunCommand(() -> m_climb.rotate(0.3), m_climb));
+    driverLeftTrigger.onFalse(new InstantCommand(() -> m_climb.rotate(0)));
+    driverRightTrigger.whileTrue(new RunCommand(() -> m_climb.rotate(-0.3), m_climb));
+    driverRightTrigger.onFalse(new InstantCommand(() -> m_climb.rotate(0)));
   }
 
   /**

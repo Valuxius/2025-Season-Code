@@ -195,7 +195,7 @@ public class DriveSubsystem extends SubsystemBase {
    * @return Position of the robot on the field
    */
   public Pose2d getPose() {
-    return m_driveOdometry.getPoseMeters();
+    return m_poseEstimator.getEstimatedPosition();
   }
 
   /**
@@ -281,7 +281,7 @@ public class DriveSubsystem extends SubsystemBase {
         doRejectUpdate = true;
       }
       if(!doRejectUpdate) { //if neither of the conditions above were met, update pose estimator
-          m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7,.7,9999999));
+          m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.3,.3,2.5));
           m_poseEstimator.addVisionMeasurement(
               mt2.pose,
               mt2.timestampSeconds);

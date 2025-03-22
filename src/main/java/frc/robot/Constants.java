@@ -19,7 +19,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
  */
 public final class Constants {
   public static class RobotConstants { 
-    public static final double kMaxSpeedMetersPerSecond = 3; //4.3 (recommended max from Jackie: 3)
+    public static final double kMaxSpeedMetersPerSecond = 4; //4.3 (recommended max from Jackie: 3)
     public static final double kMaxAccelerationMetersPerSecond = 3.5; // 4.3 theoretical max
     public static final double kMaxAngularSpeed = 2 * Math.PI; //radians per sec 
     public static final double kMaxAngularAcceleration = 2 * Math.PI; // radians per second per second
@@ -60,12 +60,14 @@ public final class Constants {
     public static final double kElevatorS = 0;
     public static final double kElevatorG = 0.025;
     public static final double kElevatorV = 1.0 / 15.0;
-    public static final double kElevatorA = 0;
 
     //gains for shooter motor PID (defaults)
-    public static final double kShooterP = 0.005;
+    public static final double kShooterP = 0.02;
     public static final double kShooterI = 0.004;
     public static final double kShooterD = 0;
+    public static final double kShooterS = 0;
+    public static final double kShooterG = 0.029;
+    public static final double kShooterV = 0.02;
 
     //drive motor ports 
     public static final int kFrontLeftDriveMotorPort = 4;

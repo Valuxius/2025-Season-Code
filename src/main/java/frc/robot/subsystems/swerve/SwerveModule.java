@@ -34,7 +34,7 @@ public class SwerveModule {
     private SwerveModuleState m_desiredState = new SwerveModuleState(0.0, new Rotation2d()); //sets the swerve module's velocity to 0 and the angle to 0 when the code is initialized
 
     public SwerveModule(int p_driveID, int p_turnID, double p_angleOffset) {
-        m_driveProfile = new TrapezoidalVelocityControl(56, 56);
+        m_driveProfile = new TrapezoidalVelocityControl(72, 72);
 
         //setting drive and turn motors for each swerve module
         m_driveMotor = new SparkMax(p_driveID, MotorType.kBrushless);
