@@ -20,8 +20,6 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.RobotConstants;
-import frc.robot.commands.Level2Algae;
-import frc.robot.commands.Net;
 import frc.robot.subsystems.ClimbSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
@@ -48,11 +46,10 @@ public class RobotContainer {
   private final SendableChooser<Command> autoChooser;
 
   public RobotContainer() {
+    LimelightHelpers.setLEDMode_ForceOn("limelight-front");
+
     //fetches the "tx" value from the front limelight
     double tx = LimelightHelpers.getTX("limelight-front");
-    //double yaw = LimelightHelpers.getTV("limelight-front") ? LimelightHelpers.getTargetPose_RobotSpace("front")[4] : 0;
-
-    LimelightHelpers.setLEDMode_ForceOff("limelight-front");
 
     //registers commands to be used in PathPlanner, allowing us to use these commands during auto
     NamedCommands.registerCommand("Reset Gyro", new InstantCommand(() -> m_drive.resetGyro(), m_drive));
@@ -144,11 +141,11 @@ public class RobotContainer {
     Trigger driverLeftTrigger = new AnalogTrigger(
       m_driverController, 
       RobotConstants.kDriverLeftTriggerAxis, 
-      0.5);
+      0.1);
     Trigger driverRightTrigger = new AnalogTrigger(
       m_driverController, 
       RobotConstants.kDriverRightTriggerAxis, 
-      0.5);
+      0.1);
 
     //initiating manipulator buttons
     Trigger manipulatorBButton = new JoystickButton(

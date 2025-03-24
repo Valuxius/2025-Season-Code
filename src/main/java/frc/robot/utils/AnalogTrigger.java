@@ -21,7 +21,7 @@ public class AnalogTrigger extends Trigger{
      * @param threshold Threshold before triggering
      */
     public AnalogTrigger(GenericHID controller, int axis, double threshold) {
-        super(() -> controller.getRawAxis(axis) >= 0.1);
+        super(() -> controller.getRawAxis(axis) >= threshold);
         requireNonNullParam(controller, "controller", "AnalogTrigger");
     }
 }
