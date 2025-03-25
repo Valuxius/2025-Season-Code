@@ -24,6 +24,7 @@ import frc.robot.subsystems.ClimbSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.swerve.DriveSubsystem;
+import frc.robot.utils.AdjustedGyro;
 import frc.robot.utils.AnalogTrigger;
 import frc.robot.utils.LimelightHelpers;
 
@@ -46,10 +47,11 @@ public class RobotContainer {
   private final SendableChooser<Command> autoChooser;
 
   public RobotContainer() {
-    LimelightHelpers.setLEDMode_ForceOn("limelight-front");
-
     //fetches the "tx" value from the front limelight
     double tx = LimelightHelpers.getTX("limelight-front");
+    //double yaw = LimelightHelpers.getTV("limelight-front") ? LimelightHelpers.getTargetPose_RobotSpace("front")[4] : 0;
+
+    LimelightHelpers.setLEDMode_ForceOff("limelight-front");
 
     //registers commands to be used in PathPlanner, allowing us to use these commands during auto
     NamedCommands.registerCommand("Reset Gyro", new InstantCommand(() -> m_drive.resetGyro(), m_drive));
@@ -141,11 +143,11 @@ public class RobotContainer {
     Trigger driverLeftTrigger = new AnalogTrigger(
       m_driverController, 
       RobotConstants.kDriverLeftTriggerAxis, 
-      0.1);
+      0.5);
     Trigger driverRightTrigger = new AnalogTrigger(
       m_driverController, 
       RobotConstants.kDriverRightTriggerAxis, 
-      0.1);
+      0.5);
 
     //initiating manipulator buttons
     Trigger manipulatorBButton = new JoystickButton(
@@ -199,6 +201,18 @@ public class RobotContainer {
       RobotConstants.kManipulatorRightTriggerAxis, 
       0.5);
 
+    Trigger gyroStop = new Trigger(
+      () -> (m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort) <= 0.05 &&
+             m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort) <= 0.05 &&
+             m_driverController.getRawAxis(RobotConstants.kRightXAxisPort)<= 0.05)
+    );
+
+    gyroStop.onTrue(new InstantCommand(() -> AdjustedGyro.setGyroStop(true)));
+    gyroStop.whileFalse(new RunCommand(() -> AdjustedGyro.setGyroStop(false)));
+
+    SmartDashboard.putBoolean("gyro", m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort) <= 0.05 &&
+                                          m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort) <= 0.05 &&
+                                          m_driverController.getRawAxis(RobotConstants.kRightXAxisPort)<= 0.05);
     //binding buttons to controls  
     driverBButton.onTrue(m_drive.resetGyro()); //reset gyro button
     driverXButton.whileTrue(new RunCommand(() -> m_drive.setX(), m_drive)); //handbrake button

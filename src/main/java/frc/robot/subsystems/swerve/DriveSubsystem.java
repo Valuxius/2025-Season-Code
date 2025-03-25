@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RobotConstants;
+import frc.robot.utils.AdjustedGyro;
 import frc.robot.utils.LimelightHelpers;
 
 public class DriveSubsystem extends SubsystemBase {
@@ -52,7 +53,7 @@ public class DriveSubsystem extends SubsystemBase {
     RobotConstants.kBackRightChassisAngularOffset);
 
   //initialize the gyro
-  public final ADXRS450_Gyro m_gyro = new ADXRS450_Gyro();
+  public AdjustedGyro m_gyro = new AdjustedGyro(new ADXRS450_Gyro());
 
   //storing the positions of the swerve modules
   private final SwerveModulePosition[] m_swervePositions = getPositions();
@@ -249,6 +250,8 @@ public class DriveSubsystem extends SubsystemBase {
   // This method will be called once per scheduler run
   @Override
   public void periodic() { 
+    SmartDashboard.putNumber("Adjusted Angle", m_gyro.getAngle());
+
     //updates the odometry every scheduled frame
     m_driveOdometry.update( 
       m_gyro.getRotation2d(),
@@ -263,6 +266,7 @@ public class DriveSubsystem extends SubsystemBase {
     if (LimelightHelpers.getTargetPose_RobotSpace("limelight-front").length != 0) {
       SmartDashboard.putNumber("Limelight", LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[0]);
     }
+
     
     //boolean variable for whether limelight data is accurate or not. if data is inaccurate, rejects limelight pose update
     boolean doRejectUpdate = false;
