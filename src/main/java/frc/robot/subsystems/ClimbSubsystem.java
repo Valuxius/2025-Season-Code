@@ -61,7 +61,7 @@ public class ClimbSubsystem extends SubsystemBase {
     if (m_climbEncoder.getPosition() <= 0 && speed < 0) {
       newSpeed = 0;
     }
-    else if (m_climbEncoder.getPosition() > 190 && speed > 0) {
+    else if (m_climbEncoder.getPosition() > 180 && speed > 0) {
       newSpeed = 0;
     }
     m_climbMotor.set(newSpeed);
