@@ -9,6 +9,7 @@ import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -33,8 +34,11 @@ public class SwerveModule {
     private double m_angleOffset; //default chassis offset aka the angle of the module from its calibrated position to being stright
     private SwerveModuleState m_desiredState = new SwerveModuleState(0.0, new Rotation2d()); //sets the swerve module's velocity to 0 and the angle to 0 when the code is initialized
 
+    private SlewRateLimiter filter = new SlewRateLimiter(15);
+
     public SwerveModule(int p_driveID, int p_turnID, double p_angleOffset) {
-        m_driveProfile = new TrapezoidalVelocityControl(72, 72);
+        //creates a new trapezoid profile (custom) to control drive motor velocity
+        m_driveProfile = new TrapezoidalVelocityControl(54, 54);
 
         //setting drive and turn motors for each swerve module
         m_driveMotor = new SparkMax(p_driveID, MotorType.kBrushless);
@@ -108,7 +112,7 @@ public class SwerveModule {
 
         //sets the state of the module to the state we created
         m_drivePID.setReference(m_driveProfile.getSetpoint(correctedDesiredState.speedMetersPerSecond, m_driveEncoder.getVelocity()), ControlType.kVelocity);
-        m_turnPID.setReference(correctedDesiredState.angle.getRadians(), ControlType.kPosition);
+        m_turnPID.setReference(filter.calculate(correctedDesiredState.angle.getRadians()), ControlType.kPosition);
 
         m_desiredState = desiredState;
     }

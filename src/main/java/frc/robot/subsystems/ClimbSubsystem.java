@@ -58,12 +58,12 @@ public class ClimbSubsystem extends SubsystemBase {
    */
   public void rotate(double speed) {
     double newSpeed = speed;
-    /*if (m_climbEncoder.getPosition() < 5 && speed < 0) {
-      newSpeed = speed * (m_climbEncoder.getPosition()/5);
-    }
-    else if (m_climbEncoder.getPosition() > 140 && speed > 0) {
+    if (m_climbEncoder.getPosition() <= 0 && speed < 0) {
       newSpeed = 0;
-    }*/
+    }
+    else if (m_climbEncoder.getPosition() > 190 && speed > 0) {
+      newSpeed = 0;
+    }
     m_climbMotor.set(newSpeed);
   }
 
@@ -90,6 +90,5 @@ public class ClimbSubsystem extends SubsystemBase {
     // This method will be called once per scheduler run
     m_climbPID.setReference(m_climbEncoder.getPosition(), ControlType.kPosition);
     SmartDashboard.putNumber("ClimbEncoder", m_climbEncoder.getPosition());
-
   }
 }

@@ -43,7 +43,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   private double stage1Height = 4; //L1 Coral Height
   private double stage2Height = 17; //L2 Coral Height
   private double stage3Height = 31; //L3 Coral Height
-  private double maxHeight = 46; //Max Height
+  private double maxHeight = 43; //Max Height
 
   private double floorAlgaeHeight = 10; //Floor Algae Height
   private double l1AlgaeHeight = 7; //L1 Algae Height
@@ -188,20 +188,11 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   /**
-   * Gets the left elevator encoder. 
+   * Gets the elevator encoder. 
    * 
-   * @return Elevator left encoder
+   * @return Elevator encoder
    */
-  public RelativeEncoder getLeftEncoder() {
-    return m_Encoder;
-  }
-
-  /**
-   * Gets the right elevator encoder.
-   * 
-   * @return Elevator right encoder
-   */
-  public RelativeEncoder getRightEncoder() {
+  public RelativeEncoder getEncoder() {
     return m_Encoder;
   }
 
@@ -230,7 +221,13 @@ public class ElevatorSubsystem extends SubsystemBase {
     m_PID.setTolerance(0.25);
     double output = m_PID.calculate(m_Encoder.getPosition(), currentState.position);
     double ff = calculateFF(currentState);
-    if (m_Encoder.getPosition() < 9 && currentState.velocity < 0 && height == 0) {
+    if (m_Encoder.getPosition() < 0.5 && height == 0) {
+      m_lMotor.set(-0.05);
+    }
+    else if (m_Encoder.getPosition() < 1 && height == 0) {
+      m_lMotor.set((-0.75/9) * m_Encoder.getPosition());
+    }
+    else if (m_Encoder.getPosition() < 9 && currentState.velocity < 0 && height == 0) {
       m_lMotor.set(-0.75 * m_Encoder.getPosition()/9);
     } 
     else if (Math.abs(m_Encoder.getPosition() - height) < 3) {
@@ -243,5 +240,9 @@ public class ElevatorSubsystem extends SubsystemBase {
       );
     }
     else m_lMotor.set(MathUtil.clamp(output+ff, -0.75, 0.75));
+
+    if (height == 0 && m_Encoder.getPosition() < 1 && Math.abs(m_Encoder.getVelocity()) <= 0.005) {
+      resetEncoder();
+    }
   }
 }

@@ -250,7 +250,7 @@ public class DriveSubsystem extends SubsystemBase {
   // This method will be called once per scheduler run
   @Override
   public void periodic() { 
-    SmartDashboard.putNumber("Adjusted Angle", m_gyro.getAngle());
+    SmartDashboard.putNumber("Adjusted Angle", -m_gyro.getAngle());
 
     //updates the odometry every scheduled frame
     m_driveOdometry.update( 
@@ -266,7 +266,6 @@ public class DriveSubsystem extends SubsystemBase {
     if (LimelightHelpers.getTargetPose_RobotSpace("limelight-front").length != 0) {
       SmartDashboard.putNumber("Limelight", LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[0]);
     }
-
     
     //boolean variable for whether limelight data is accurate or not. if data is inaccurate, rejects limelight pose update
     boolean doRejectUpdate = false;
@@ -285,7 +284,7 @@ public class DriveSubsystem extends SubsystemBase {
         doRejectUpdate = true;
       }
       if(!doRejectUpdate) { //if neither of the conditions above were met, update pose estimator
-          m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.3,.3,2.5));
+          m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.01,.01,9999999));
           m_poseEstimator.addVisionMeasurement(
               mt2.pose,
               mt2.timestampSeconds);

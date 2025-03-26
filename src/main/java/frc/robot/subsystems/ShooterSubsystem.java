@@ -151,6 +151,10 @@ public class ShooterSubsystem extends SubsystemBase {
     return m_rotationEncoder;
   }
 
+  public void resetEncoder() {
+    m_rotationEncoder.setPosition(0);
+  }
+
   public double calculateFF(TrapezoidProfile.State state) {
     return RobotConstants.kShooterS * Math.signum(state.velocity) +
            RobotConstants.kShooterG +
@@ -167,15 +171,18 @@ public class ShooterSubsystem extends SubsystemBase {
     if (m_rotationEncoder.getPosition() > 10.5) {
       m_rotationMotor.set(ff * ((11 - m_rotationEncoder.getPosition())/0.5));
     }
-    else if (Math.abs(m_rotationEncoder.getPosition() - rotation) < 1 && currentState.velocity != 0) {
+    else if (Math.abs(m_rotationEncoder.getPosition() - rotation) < 1.5 && currentState.velocity != 0) {
       m_rotationMotor.set(
         (rotation > m_rotationEncoder.getPosition()) ?
-        0.2 * (rotation - m_rotationEncoder.getPosition()) + RobotConstants.kShooterG :
-        -0.2 * (m_rotationEncoder.getPosition() - rotation) + RobotConstants.kShooterG
+        0.2 * ((rotation - m_rotationEncoder.getPosition())/1.5) + RobotConstants.kShooterG :
+        -0.2 * ((m_rotationEncoder.getPosition() - rotation)/1.5) + RobotConstants.kShooterG
       );
     }
     else m_rotationMotor.set(ff+output);
+
+    if (rotation == 0 && m_rotationEncoder.getPosition() < 0.5 && Math.abs(m_rotationEncoder.getVelocity()) < 0.005) {
+      resetEncoder();
+    }
     SmartDashboard.putNumber("ShooterEncoder", m_rotationEncoder.getPosition());
-    SmartDashboard.putNumber("ff", ff);
   }
 }

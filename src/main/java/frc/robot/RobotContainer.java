@@ -47,10 +47,6 @@ public class RobotContainer {
   private final SendableChooser<Command> autoChooser;
 
   public RobotContainer() {
-    //fetches the "tx" value from the front limelight
-    double tx = LimelightHelpers.getTX("limelight-front");
-    //double yaw = LimelightHelpers.getTV("limelight-front") ? LimelightHelpers.getTargetPose_RobotSpace("front")[4] : 0;
-
     LimelightHelpers.setLEDMode_ForceOff("limelight-front");
 
     //registers commands to be used in PathPlanner, allowing us to use these commands during auto
@@ -80,13 +76,9 @@ public class RobotContainer {
           true), //turn to false to get rid of field relative
       m_drive));
 
-            //squared(-MathUtil.applyDeadband(m_driverController.getRawAxis(OperatorConstants.kRightXAxisPort),.05))
-
     //Publishes data on SmartDashboard/Shuffleboard
     SmartDashboard.putData("Auto Chooser", autoChooser);
-    SmartDashboard.putData(m_drive.m_gyro);
     SmartDashboard.putData(m_drive.m_field);
-    SmartDashboard.putNumber("x", tx);
   }
 
   /**
@@ -202,17 +194,14 @@ public class RobotContainer {
       0.5);
 
     Trigger gyroStop = new Trigger(
-      () -> (m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort) <= 0.05 &&
-             m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort) <= 0.05 &&
-             m_driverController.getRawAxis(RobotConstants.kRightXAxisPort)<= 0.05)
+      () -> (Math.abs(m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort)) <= 0.05 &&
+             Math.abs(m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort)) <= 0.05 &&
+             Math.abs(m_driverController.getRawAxis(RobotConstants.kRightXAxisPort)) <= 0.05)
     );
 
     gyroStop.onTrue(new InstantCommand(() -> AdjustedGyro.setGyroStop(true)));
     gyroStop.whileFalse(new RunCommand(() -> AdjustedGyro.setGyroStop(false)));
 
-    SmartDashboard.putBoolean("gyro", m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort) <= 0.05 &&
-                                          m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort) <= 0.05 &&
-                                          m_driverController.getRawAxis(RobotConstants.kRightXAxisPort)<= 0.05);
     //binding buttons to controls  
     driverBButton.onTrue(m_drive.resetGyro()); //reset gyro button
     driverXButton.whileTrue(new RunCommand(() -> m_drive.setX(), m_drive)); //handbrake button
@@ -223,7 +212,7 @@ public class RobotContainer {
             if (LimelightHelpers.getTargetPose_RobotSpace("limelight-front").length != 0) {
               m_drive.drive(
               squared(-MathUtil.applyDeadband(m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort), .05)),
-              (LimelightHelpers.getTV("limelight-front")) ? MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[0]+0.125, -0.25, 0.25), 0.01) : 0,
+              (LimelightHelpers.getTV("limelight-front")) ? MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[0]+0.125, -0.25, 0.25), 0.075) : 0,
               MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[4] * 0.01, -0.4, 0.4),0.03), 
               false);
             }
@@ -254,11 +243,6 @@ public class RobotContainer {
             }, 
             m_drive));
 
-    // manipulatorLeftTrigger.whileTrue(new InstantCommand(() -> m_shooter.shoot(-0.3)));
-    // manipulatorBButton.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
-    // manipulatorAButton.whileTrue(new InstantCommand(() -> m_shooter.shoot(0.3)));
-    // manipulatorAButton.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
-
     manipulatorRightJoystick.onTrue(new InstantCommand(() -> {m_elevator.setPreset(5); m_shooter.setPreset(2);}));
     manipulatorLeftJoystick.onTrue(new InstantCommand(() -> {m_elevator.setPreset(6); m_shooter.setPreset(2);}));
 
@@ -281,7 +265,7 @@ public class RobotContainer {
 
     manipulatorPlusButton.whileTrue(new RunCommand(() -> m_shooter.rotate(0.15), m_shooter));
     manipulatorPlusButton.onFalse(new InstantCommand(() -> m_shooter.rotate(0)));
-    manipulatorMinusButton.whileTrue(new RunCommand(() -> m_shooter.rotate(-0.15)));
+    manipulatorMinusButton.whileTrue(new RunCommand(() -> m_shooter.rotate(-0.15), m_shooter));
     manipulatorMinusButton.onFalse(new InstantCommand(() -> m_shooter.rotate(0)));
     
     manipulatorDPadLeft.whileTrue(new RunCommand(() -> m_elevator.ascend(0.3), m_elevator));
@@ -293,33 +277,6 @@ public class RobotContainer {
     driverLeftTrigger.onFalse(new InstantCommand(() -> m_climb.rotate(0)));
     driverRightTrigger.whileTrue(new RunCommand(() -> m_climb.rotate(-0.3), m_climb));
     driverRightTrigger.onFalse(new InstantCommand(() -> m_climb.rotate(0)));
-  }
-
-  /**
-   * Gets the elevator subsystem.
-   * 
-   * @return Elevator subsystem
-   */
-  public ElevatorSubsystem getElevator() {
-    return m_elevator;
-  }
-
-  /**
-   * Gets the shooter subsystem.
-   * 
-   * @return Shooter subsystem
-   */
-  public ShooterSubsystem getShooter() {
-    return m_shooter;
-  }
-
-  /**
-   * Gets the climb subsystem.
-   * 
-   * @return Climb subsystem
-   */
-  public ClimbSubsystem getClimb() {
-    return m_climb;
   }
 
   /**
