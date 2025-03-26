@@ -19,7 +19,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
  */
 public final class Constants {
   public static class RobotConstants { 
-    public static final double kMaxSpeedMetersPerSecond = 4; //4.3 (recommended max from Jackie: 3)
+    public static final double kMaxSpeedMetersPerSecond = 4; //4.3
     public static final double kMaxAccelerationMetersPerSecond = 3.5; // 4.3 theoretical max
     public static final double kMaxAngularSpeed = 2 * Math.PI; //radians per sec 
     public static final double kMaxAngularAcceleration = 2 * Math.PI; // radians per second per second

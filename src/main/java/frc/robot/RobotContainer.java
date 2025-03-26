@@ -206,7 +206,7 @@ public class RobotContainer {
     driverBButton.onTrue(m_drive.resetGyro()); //reset gyro button
     driverXButton.whileTrue(new RunCommand(() -> m_drive.setX(), m_drive)); //handbrake button
 
-    driverAButton.whileTrue(
+    driverDPadLeft.whileTrue(
       new RunCommand(
           () -> {
             if (LimelightHelpers.getTargetPose_RobotSpace("limelight-front").length != 0) {
@@ -218,7 +218,7 @@ public class RobotContainer {
             }
           }, 
           m_drive));
-    driverYButton.whileTrue(
+    driverDPadRight.whileTrue(
       new RunCommand(
           () -> {
             if (LimelightHelpers.getTargetPose_RobotSpace("limelight-front").length != 0) {
@@ -230,18 +230,18 @@ public class RobotContainer {
             }
           }, 
           m_drive));
-      driverPlusButton.whileTrue(
-        new RunCommand(
-            () -> {
-              if (LimelightHelpers.getTargetPose_RobotSpace("limelight-front").length != 0) {
-                m_drive.drive(
-                squared(-MathUtil.applyDeadband(m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort), .05)),
-                (LimelightHelpers.getTV("limelight-front")) ? MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[0]-0.05, -0.25, 0.25), 0.01) : 0,
-                MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[4] * 0.01, -0.4, 0.4),0.03), 
-                false);
-              }
-            }, 
-            m_drive));
+    driverDPadUp.whileTrue(
+      new RunCommand(
+          () -> {
+            if (LimelightHelpers.getTargetPose_RobotSpace("limelight-front").length != 0) {
+              m_drive.drive(
+              squared(-MathUtil.applyDeadband(m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort), .05)),
+              (LimelightHelpers.getTV("limelight-front")) ? MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[0]-0.05, -0.25, 0.25), 0.01) : 0,
+              MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[4] * 0.01, -0.4, 0.4),0.03), 
+              false);
+            }
+          }, 
+          m_drive));
 
     manipulatorRightJoystick.onTrue(new InstantCommand(() -> {m_elevator.setPreset(5); m_shooter.setPreset(2);}));
     manipulatorLeftJoystick.onTrue(new InstantCommand(() -> {m_elevator.setPreset(6); m_shooter.setPreset(2);}));
@@ -273,10 +273,10 @@ public class RobotContainer {
     manipulatorDPadRight.whileTrue(new RunCommand(() -> m_elevator.descend(0.3), m_elevator));
     manipulatorDPadRight.onFalse(new InstantCommand(() -> m_elevator.descend(0)));
 
-    driverLeftTrigger.whileTrue(new RunCommand(() -> m_climb.rotate(0.3), m_climb));
-    driverLeftTrigger.onFalse(new InstantCommand(() -> m_climb.rotate(0)));
-    driverRightTrigger.whileTrue(new RunCommand(() -> m_climb.rotate(-0.3), m_climb));
-    driverRightTrigger.onFalse(new InstantCommand(() -> m_climb.rotate(0)));
+    driverRightShoulder.whileTrue(new RunCommand(() -> m_climb.rotate(0.3), m_climb));
+    driverRightShoulder.onFalse(new InstantCommand(() -> m_climb.rotate(0)));
+    driverLeftShoulder.whileTrue(new RunCommand(() -> m_climb.rotate(-0.3), m_climb));
+    driverLeftShoulder.onFalse(new InstantCommand(() -> m_climb.rotate(0)));
   }
 
   /**

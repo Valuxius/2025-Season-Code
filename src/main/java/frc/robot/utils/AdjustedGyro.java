@@ -8,12 +8,15 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
+/**
+ * A wrapper class designed to fix some of the issues with the current ADXRS450_Gyro.
+ * 
+ * This class stops stationary gyro drift while providing the necessary functionality of a gyro.
+ */
 public class AdjustedGyro extends SubsystemBase {
-  //private Joystick m_driverController = new Joystick(1);
-  public ADXRS450_Gyro m_gyro;
+  //initializing the gyro
+  private ADXRS450_Gyro m_gyro;
   private Timer timer = new Timer();
   private double stoppedAngle;
   private double accumulatedError;

@@ -35,22 +35,23 @@ public class DriveSubsystem extends SubsystemBase {
   private final SwerveModule m_frontLeft = new SwerveModule(
     RobotConstants.kFrontLeftDriveMotorPort, 
     RobotConstants.kFrontLeftTurnMotorPort, 
-    RobotConstants.kFrontLeftChassisAngularOffset);
-
+    RobotConstants.kFrontLeftChassisAngularOffset
+  );
   private final SwerveModule m_frontRight = new SwerveModule(
     RobotConstants.kFrontRightDriveMotorPort, 
     RobotConstants.kFrontRightTurnMotorPort, 
-    RobotConstants.kFrontRightChassisAngularOffset);
-
+    RobotConstants.kFrontRightChassisAngularOffset
+  );
   private final SwerveModule m_backLeft = new SwerveModule(
     RobotConstants.kBackLeftDriveMotorPort, 
     RobotConstants.kBackLeftTurnMotorPort, 
-    RobotConstants.kBackLeftChassisAngularOffset);
-
+    RobotConstants.kBackLeftChassisAngularOffset
+  );
   private final SwerveModule m_backRight = new SwerveModule(
     RobotConstants.kBackRightDriveMotorPort, 
     RobotConstants.kBackRightTurnMotorPort, 
-    RobotConstants.kBackRightChassisAngularOffset);
+    RobotConstants.kBackRightChassisAngularOffset
+  );
 
   //initialize the gyro
   public AdjustedGyro m_gyro = new AdjustedGyro(new ADXRS450_Gyro());
@@ -59,7 +60,11 @@ public class DriveSubsystem extends SubsystemBase {
   private final SwerveModulePosition[] m_swervePositions = getPositions();
 
   //odometry object to track the robots pose on the field
-  private final SwerveDriveOdometry m_driveOdometry = new SwerveDriveOdometry(RobotConstants.kDriveKinematics, m_gyro.getRotation2d(), m_swervePositions);
+  private final SwerveDriveOdometry m_driveOdometry = new SwerveDriveOdometry(
+    RobotConstants.kDriveKinematics, 
+    m_gyro.getRotation2d(), 
+    m_swervePositions
+  );
 
   //poseEstimator object which tracks the robots pose on the field (similar to odometry object but can use vision data for more accurate tracking)
   private final SwerveDrivePoseEstimator m_poseEstimator =
@@ -85,16 +90,16 @@ public class DriveSubsystem extends SubsystemBase {
 
     //supplies methods for pathplanner to use for position estimation and auto
     AutoBuilder.configure(
-      //get position method
+      //this provides a method for pathplanner to get the current position of the robot
       this::getPose,
-      //the next 4 lines are a method for the pathplanner to reset position estimate
+      //the next 4 lines provide a method for pathplanner to reset position estimate
       (pose) -> {
         resetPose(pose);
         m_poseEstimator.resetPosition(m_gyro.getRotation2d(), getPositions(), pose);
       },
-      //method that returns current speeds
+      //this provides a method for pathplanner to retrieve robot's current speeds (velocities)
       this::getCurrentSpeeds,
-      //method for pathplanner to drive with parameters "speeds" and "feedforwards"
+      //provided method for pathplanner to drive with parameters "speeds" and "feedforwards"
       (speeds, feedforwards) -> autoDrive(speeds),
       //creates drive and turn PID for auto with constants 5, 0, 0
       new PPHolonomicDriveController(
@@ -111,8 +116,7 @@ public class DriveSubsystem extends SubsystemBase {
         }
         return false;
       },
-      //subsystem to be used (drive subsystem)
-      this
+      this //subsystem to be used (drive subsystem)
     );
   }
 
@@ -132,13 +136,15 @@ public class DriveSubsystem extends SubsystemBase {
 
     //creates an array of states to be applied to all 4 swerve modules
     var swerveModuleStates = RobotConstants.kDriveKinematics.toSwerveModuleStates(
-      ChassisSpeeds.discretize(fieldRelative ? //if field relative is true, convert controller input to chassis speeds, otherwise use raw controller input as chassis speeds
+      ChassisSpeeds.discretize(fieldRelative ? 
+        //if field relative is true, convert controller input to chassis speeds, otherwise use raw controller input as chassis speeds
         ChassisSpeeds.fromFieldRelativeSpeeds( //converts field relative input into chassis speeds
           xSpeedDelivered, 
           ySpeedDelivered, 
           rotDelivered, 
           m_gyro.getRotation2d())
-        : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered), //uses raw controller input as chassis speeds
+        //if field relative is false, uses raw controller input as chassis speeds
+        : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered), 
         RobotConstants.kDriverPeriod)); 
 
     //caps the wheel speeds so they don't go faster than they should
@@ -250,6 +256,7 @@ public class DriveSubsystem extends SubsystemBase {
   // This method will be called once per scheduler run
   @Override
   public void periodic() { 
+    //puts the angle of the gyro in Shuffleboard
     SmartDashboard.putNumber("Adjusted Angle", -m_gyro.getAngle());
 
     //updates the odometry every scheduled frame
@@ -263,10 +270,7 @@ public class DriveSubsystem extends SubsystemBase {
       m_gyro.getRotation2d(), 
       getPositions()
     );
-    if (LimelightHelpers.getTargetPose_RobotSpace("limelight-front").length != 0) {
-      SmartDashboard.putNumber("Limelight", LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[0]);
-    }
-    
+
     //boolean variable for whether limelight data is accurate or not. if data is inaccurate, rejects limelight pose update
     boolean doRejectUpdate = false;
 
@@ -284,10 +288,18 @@ public class DriveSubsystem extends SubsystemBase {
         doRejectUpdate = true;
       }
       if(!doRejectUpdate) { //if neither of the conditions above were met, update pose estimator
-          m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.01,.01,9999999));
-          m_poseEstimator.addVisionMeasurement(
-              mt2.pose,
-              mt2.timestampSeconds);
+        //determines how much to trust each value provided by the limelight
+        //increase values to trust values less, decrease values to trust values more
+        m_poseEstimator.setVisionMeasurementStdDevs(
+          VecBuilder.fill(
+            .5, //x stddev (error)
+            .5, //y stddev (error)
+            9999999)); //theta stddev (error)
+
+        //posts vision measurement to pose estimator    
+        m_poseEstimator.addVisionMeasurement(
+            mt2.pose,
+            mt2.timestampSeconds);
       }    
     }
   }
