@@ -4,17 +4,13 @@
 
 package frc.robot.subsystems;
 
-import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -41,7 +37,7 @@ public class ShooterSubsystem extends SubsystemBase {
   //variable for preset
   private double preset = 0;
 
-  //angle variables (0 should be straight up, increased values bring the shooter down)
+  //angle variables (0 is bottom)
   private double netPreset = 9.5;
   private double algaePreset = 7;
   private double floorPreset = 8;
@@ -50,9 +46,6 @@ public class ShooterSubsystem extends SubsystemBase {
   private double l3coralPreset = 1;
   private double humanPlayerPreset = 2;
   private double processorPreset = 2;
-
-  //speed variable
-  private double speed = 0.1;
 
   //rotation variable
   private double rotation = 0;
@@ -76,6 +69,7 @@ public class ShooterSubsystem extends SubsystemBase {
     m_rotationPID = new ProfiledPIDController(
       RobotConstants.kShooterP, RobotConstants.kShooterI, RobotConstants.kShooterD, constraints, 0.02);
 
+    //disables I accumulation when it hits 0.25
     m_rotationPID.setIZone(0.25);
     
     //default states
@@ -89,6 +83,7 @@ public class ShooterSubsystem extends SubsystemBase {
     m_shooterMotor.configure(MotorConfigs.m_shooterConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     m_rotationMotor.configure(MotorConfigs.m_shooterConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
+    //sets tolerance for feedback control
     m_rotationPID.setTolerance(0.1);
   }
 
@@ -107,20 +102,28 @@ public class ShooterSubsystem extends SubsystemBase {
    * @param speed Speed to rotate at, 0 - 1.
    */
   public void rotate(double speed) {
+    //disables PID control
     m_rotationPID.reset(m_rotationEncoder.getPosition());
+    
+    //disables trapezoidal calculations
     currentState = new TrapezoidProfile.State(m_rotationEncoder.getPosition(), 0);
     goalState = new TrapezoidProfile.State(m_rotationEncoder.getPosition(), 0);
 
+    //locks rotation to current setpoint
     rotation = m_rotationEncoder.getPosition();
 
     double newSpeed = speed;
 
+    //slows down rotation when moving down to the bottom
     if (m_rotationEncoder.getPosition() < 4 && speed < 0) {
       newSpeed = speed * (m_rotationEncoder.getPosition()/4);
-    } else if (m_rotationEncoder.getPosition() > 7 && speed > 0) {
+    } 
+    
+    //slows down rotation when moving up
+    else if (m_rotationEncoder.getPosition() > 7 && speed > 0) {
       newSpeed = speed * ((11 - m_rotationEncoder.getPosition())/4);
     }
-
+    
     m_rotationMotor.set(newSpeed);
   }
 
@@ -131,6 +134,7 @@ public class ShooterSubsystem extends SubsystemBase {
    */
   public void setPreset(int preset) {
     this.preset = preset;
+
     if (preset == 0) rotation = 0;
     else if (preset == 1) rotation = netPreset;
     else if (preset == 2) rotation = algaePreset;
@@ -151,10 +155,19 @@ public class ShooterSubsystem extends SubsystemBase {
     return m_rotationEncoder;
   }
 
+  /**
+   * Zeroes the shooter rotation encoder.
+   */
   public void resetEncoder() {
     m_rotationEncoder.setPosition(0);
   }
 
+  /**
+   * Calculates the necessary feedforward to control the shooter.
+   * 
+   * @param state Current state of the shooter (position, velocity)
+   * @return Feedforward value to set to motors
+   */
   public double calculateFF(TrapezoidProfile.State state) {
     return RobotConstants.kShooterS * Math.signum(state.velocity) +
            RobotConstants.kShooterG +
@@ -164,13 +177,24 @@ public class ShooterSubsystem extends SubsystemBase {
   // This method will be called once per scheduler run
   @Override
   public void periodic() {
+    //sets goal setpoint for trapezoidal calculation
     goalState = new TrapezoidProfile.State(rotation, 0);
+    
+    //calculates the next "step" for trapezoidal motion
     currentState = profile.calculate(0.02, currentState, goalState);
-    double output = m_rotationPID.calculate(m_rotationEncoder.getPosition(), currentState.position);
+
+    //calculates feedforward output
     double ff = MathUtil.clamp(calculateFF(currentState), -0.2, 0.2);
+
+    //adjusts for feedforward error using a feedback controller
+    double output = m_rotationPID.calculate(m_rotationEncoder.getPosition(), currentState.position);
+
+    //moves the shooter to max height when it hits within 0.5 of the max rotation
     if (m_rotationEncoder.getPosition() > 10.5) {
       m_rotationMotor.set(ff * ((11 - m_rotationEncoder.getPosition())/0.5));
     }
+
+    //slows down output near the bottom of the shooter 
     else if (Math.abs(m_rotationEncoder.getPosition() - rotation) < 1.5 && currentState.velocity != 0) {
       m_rotationMotor.set(
         (rotation > m_rotationEncoder.getPosition()) ?
@@ -178,11 +202,16 @@ public class ShooterSubsystem extends SubsystemBase {
         -0.2 * ((m_rotationEncoder.getPosition() - rotation)/1.5) + RobotConstants.kShooterG
       );
     }
+
+    //uses feedforward and PID control to set a setpoint
     else m_rotationMotor.set(ff+output);
 
+    //detects when the shooter is at the bottom and zeroes the encoders
     if (rotation == 0 && m_rotationEncoder.getPosition() < 0.5 && Math.abs(m_rotationEncoder.getVelocity()) < 0.005) {
       resetEncoder();
     }
+
+    //posts the shooter encoder value to Shuffleboard
     SmartDashboard.putNumber("ShooterEncoder", m_rotationEncoder.getPosition());
   }
 }

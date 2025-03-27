@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -39,6 +38,7 @@ public class RobotContainer {
     RobotConstants.kRotationMotorPort);
   private final ClimbSubsystem m_climb = new ClimbSubsystem(
     RobotConstants.kClimbMotorPort);
+
   //creating the controllers, allows our controllers to be detected by our programming
   Joystick m_driverController = new Joystick(RobotConstants.kDriverControllerPort); //kDriverControllerPort is the port on which the driver controller is connected to
   Joystick m_manipulatorController = new Joystick(RobotConstants.kManipulatorControllerPort); //kManipulatorControllerPort is the port on which the manipulator controller is connected to
@@ -47,6 +47,7 @@ public class RobotContainer {
   private final SendableChooser<Command> autoChooser;
 
   public RobotContainer() {
+    //makes sure our limelight LEDs are off
     LimelightHelpers.setLEDMode_ForceOff("limelight-front");
 
     //registers commands to be used in PathPlanner, allowing us to use these commands during auto
@@ -193,12 +194,14 @@ public class RobotContainer {
       RobotConstants.kManipulatorRightTriggerAxis, 
       0.5);
 
+    //detection for when robot is stationary/not being controlled
     Trigger gyroStop = new Trigger(
       () -> (Math.abs(m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort)) <= 0.05 &&
              Math.abs(m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort)) <= 0.05 &&
              Math.abs(m_driverController.getRawAxis(RobotConstants.kRightXAxisPort)) <= 0.05)
     );
 
+    //stops gyro when robot is stationary, starts gyro again when robot is moving
     gyroStop.onTrue(new InstantCommand(() -> AdjustedGyro.setGyroStop(true)));
     gyroStop.whileFalse(new RunCommand(() -> AdjustedGyro.setGyroStop(false)));
 
@@ -206,77 +209,120 @@ public class RobotContainer {
     driverBButton.onTrue(m_drive.resetGyro()); //reset gyro button
     driverXButton.whileTrue(new RunCommand(() -> m_drive.setX(), m_drive)); //handbrake button
 
+    //left reef alignment command
     driverDPadLeft.whileTrue(
       new RunCommand(
           () -> {
+            //makes sure 3d localization is on before running, preventing code crash
             if (LimelightHelpers.getTargetPose_RobotSpace("limelight-front").length != 0) {
               m_drive.drive(
-              squared(-MathUtil.applyDeadband(m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort), .05)),
-              (LimelightHelpers.getTV("limelight-front")) ? MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[0]+0.125, -0.25, 0.25), 0.075) : 0,
-              MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[4] * 0.01, -0.4, 0.4),0.03), 
-              false);
+                //raw controller input for forward and backward
+                squared(-MathUtil.applyDeadband(m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort), .05)),
+                //aligns on the horizontal axis with the april tag, then offsets for left side of the reef
+                (LimelightHelpers.getTV("limelight-front")) ? 
+                  MathUtil.applyDeadband(MathUtil.clamp(
+                    -LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[0]+0.125, -0.25, 0.25), 0.075) 
+                  : 0,
+                //rotates the robot to make it parallel to the april tag
+                MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[4] * 0.01, -0.4, 0.4),0.03), 
+                false
+              );
             }
           }, 
-          m_drive));
+        m_drive));
+
+    //right reef alignment command
     driverDPadRight.whileTrue(
       new RunCommand(
           () -> {
+            //makes sure 3d localization is on before running, preventing code crash
             if (LimelightHelpers.getTargetPose_RobotSpace("limelight-front").length != 0) {
               m_drive.drive(
-              squared(-MathUtil.applyDeadband(m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort), .05)),
-              (LimelightHelpers.getTV("limelight-front")) ? MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[0]-0.2, -0.25, 0.25), 0.01) : 0,
-              MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[4] * 0.01, -0.4, 0.4),0.03), 
-              false);
+                //raw controller input for forward and backward
+                squared(-MathUtil.applyDeadband(m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort), .05)),
+                //aligns on the horizontal axis with the april tag, then offsets for right side of the reef
+                (LimelightHelpers.getTV("limelight-front")) ? 
+                  MathUtil.applyDeadband(MathUtil.clamp( 
+                    -LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[0]-0.2, -0.25, 0.25), 0.01) 
+                  : 0,
+                //rotates the robot to make it parallel to the april tag
+                MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[4] * 0.01, -0.4, 0.4),0.03), 
+                false
+              );
             }
           }, 
-          m_drive));
+        m_drive));
+
+    //center reef alignment 
     driverDPadUp.whileTrue(
       new RunCommand(
           () -> {
+            //makes sure 3d localization is on before running, preventing code crash
             if (LimelightHelpers.getTargetPose_RobotSpace("limelight-front").length != 0) {
               m_drive.drive(
-              squared(-MathUtil.applyDeadband(m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort), .05)),
-              (LimelightHelpers.getTV("limelight-front")) ? MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[0]-0.05, -0.25, 0.25), 0.01) : 0,
-              MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[4] * 0.01, -0.4, 0.4),0.03), 
-              false);
+                //raw controller input for forward and backward
+                squared(-MathUtil.applyDeadband(m_driverController.getRawAxis(RobotConstants.kLeftYAxisPort), .05)),
+                //aligns on the horizontal axis with the april tag, then offsets for center of the reef
+                (LimelightHelpers.getTV("limelight-front")) ? 
+                  MathUtil.applyDeadband(MathUtil.clamp(
+                    -LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[0]-0.05, -0.25, 0.25), 0.01) 
+                  : 0,
+                //rotates the robot to make it parallel to the april tag
+                MathUtil.applyDeadband(MathUtil.clamp(-LimelightHelpers.getTargetPose_RobotSpace("limelight-front")[4] * 0.01, -0.4, 0.4),0.03), 
+                false
+              );
             }
           }, 
-          m_drive));
+        m_drive));
 
-    manipulatorRightJoystick.onTrue(new InstantCommand(() -> {m_elevator.setPreset(5); m_shooter.setPreset(2);}));
-    manipulatorLeftJoystick.onTrue(new InstantCommand(() -> {m_elevator.setPreset(6); m_shooter.setPreset(2);}));
-
-    manipulatorLeftShoulder.whileTrue(new InstantCommand(() -> m_shooter.shoot(-1)));
-    manipulatorLeftShoulder.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
-    manipulatorRightShoulder.whileTrue(new InstantCommand(() -> m_shooter.shoot(1)));
-    manipulatorRightShoulder.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
-    
-    manipulatorLeftTrigger.whileTrue(new RunCommand(() -> m_shooter.shoot(-0.3)));
-    manipulatorLeftTrigger.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
-    manipulatorRightTrigger.whileTrue(new RunCommand(() -> m_shooter.shoot(0.3)));
-    manipulatorRightTrigger.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
-
-    manipulatorDPadUp.onTrue(new InstantCommand(() -> {m_elevator.setPreset(9); m_shooter.setPreset(1);}));
-    manipulatorDPadDown.onTrue(new InstantCommand(() -> {m_elevator.setPreset(7); m_shooter.setPreset(8);}));
-    manipulatorBButton.onTrue(new InstantCommand(() -> {m_elevator.setPreset(2); m_shooter.setPreset(5);}));
-    manipulatorAButton.onTrue(new InstantCommand(() -> {m_elevator.setPreset(3); m_shooter.setPreset(6);}));
-    manipulatorXButton.onTrue(new InstantCommand(() -> {m_elevator.setPreset(0); m_shooter.setPreset(0);}));
-    manipulatorYButton.onTrue(new InstantCommand(() -> {m_elevator.setPreset(1); m_shooter.setPreset(4);}));
-
-    manipulatorPlusButton.whileTrue(new RunCommand(() -> m_shooter.rotate(0.15), m_shooter));
-    manipulatorPlusButton.onFalse(new InstantCommand(() -> m_shooter.rotate(0)));
-    manipulatorMinusButton.whileTrue(new RunCommand(() -> m_shooter.rotate(-0.15), m_shooter));
-    manipulatorMinusButton.onFalse(new InstantCommand(() -> m_shooter.rotate(0)));
-    
-    manipulatorDPadLeft.whileTrue(new RunCommand(() -> m_elevator.ascend(0.3), m_elevator));
+    //manual elevator control
+    manipulatorDPadLeft.whileTrue(new RunCommand(() -> m_elevator.ascend(0.3), m_elevator)); //ascend
     manipulatorDPadLeft.onFalse(new InstantCommand(() -> m_elevator.ascend(0)));
-    manipulatorDPadRight.whileTrue(new RunCommand(() -> m_elevator.descend(0.3), m_elevator));
+    manipulatorDPadRight.whileTrue(new RunCommand(() -> m_elevator.descend(0.3), m_elevator)); //descend
     manipulatorDPadRight.onFalse(new InstantCommand(() -> m_elevator.descend(0)));
 
-    driverRightShoulder.whileTrue(new RunCommand(() -> m_climb.rotate(0.3), m_climb));
+    //manual shooter control
+    manipulatorPlusButton.whileTrue(new RunCommand(() -> m_shooter.rotate(0.15), m_shooter)); //tilt up
+    manipulatorPlusButton.onFalse(new InstantCommand(() -> m_shooter.rotate(0)));
+    manipulatorMinusButton.whileTrue(new RunCommand(() -> m_shooter.rotate(-0.15), m_shooter)); //tilt down
+    manipulatorMinusButton.onFalse(new InstantCommand(() -> m_shooter.rotate(0)));
+
+    //manual climb control
+    driverRightShoulder.whileTrue(new RunCommand(() -> m_climb.rotate(0.3), m_climb)); //tilt up
     driverRightShoulder.onFalse(new InstantCommand(() -> m_climb.rotate(0)));
-    driverLeftShoulder.whileTrue(new RunCommand(() -> m_climb.rotate(-0.3), m_climb));
+    driverLeftShoulder.whileTrue(new RunCommand(() -> m_climb.rotate(-0.3), m_climb)); //tilt down
     driverLeftShoulder.onFalse(new InstantCommand(() -> m_climb.rotate(0)));
+    
+    //slow intakes and outtakes
+    manipulatorLeftTrigger.whileTrue(new RunCommand(() -> m_shooter.shoot(-0.3))); //slow intake
+    manipulatorLeftTrigger.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
+    manipulatorRightTrigger.whileTrue(new RunCommand(() -> m_shooter.shoot(0.3))); //slow outtake
+    manipulatorRightTrigger.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
+
+    //fast intakes and outtakes
+    manipulatorLeftShoulder.whileTrue(new InstantCommand(() -> m_shooter.shoot(-1))); //fast intake
+    manipulatorLeftShoulder.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
+    manipulatorRightShoulder.whileTrue(new InstantCommand(() -> m_shooter.shoot(1))); //fast outtake
+    manipulatorRightShoulder.onFalse(new InstantCommand(() -> m_shooter.shoot(0)));
+
+    //algae presets
+    manipulatorRightJoystick.onTrue(new InstantCommand(() -> {m_elevator.setPreset(5); m_shooter.setPreset(2);})); //lower algae
+    manipulatorLeftJoystick.onTrue(new InstantCommand(() -> {m_elevator.setPreset(6); m_shooter.setPreset(2);})); //higher algae
+    
+    //net preset
+    manipulatorDPadUp.onTrue(new InstantCommand(() -> {m_elevator.setPreset(9); m_shooter.setPreset(1);}));
+
+    //processor preset
+    manipulatorDPadDown.onTrue(new InstantCommand(() -> {m_elevator.setPreset(7); m_shooter.setPreset(8);}));
+    
+    //reset button
+    manipulatorXButton.onTrue(new InstantCommand(() -> {m_elevator.setPreset(0); m_shooter.setPreset(0);}));
+
+    //coral presets
+    manipulatorYButton.onTrue(new InstantCommand(() -> {m_elevator.setPreset(1); m_shooter.setPreset(4);})); //L1
+    manipulatorBButton.onTrue(new InstantCommand(() -> {m_elevator.setPreset(2); m_shooter.setPreset(5);})); //L2
+    manipulatorAButton.onTrue(new InstantCommand(() -> {m_elevator.setPreset(3); m_shooter.setPreset(6);})); //L3
+
   }
 
   /**

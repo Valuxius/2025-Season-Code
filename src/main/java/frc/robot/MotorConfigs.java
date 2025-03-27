@@ -23,15 +23,8 @@ public final class MotorConfigs {
     public static final SparkMaxConfig m_elevatorConfig = new SparkMaxConfig();
     public static final SparkMaxConfig m_shooterConfig = new SparkMaxConfig();
 
-    //motion config object for drive motor
-    public static final MAXMotionConfig m_motionConfig = new MAXMotionConfig();
-
     //executes once the class is loaded into memory
     static {
-        //configures the motion profile for each motor
-        m_motionConfig 
-            .positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal); //sets the motion profile to trapezoidal
-
         //the lines below configure the SparkMaxConfig object for the drive motor
         m_driveConfig
             .idleMode(IdleMode.kCoast) //sets drive motor's idle mode into brake mode (locked in place)
@@ -69,30 +62,32 @@ public final class MotorConfigs {
             .positionWrappingInputRange(RobotConstants.kTurnEncoderPositionPIDMinInput, RobotConstants.kTurnEncoderPositionPIDMaxInput); //set the input range for PID wrapping with position closed loop control, currently set from 0 to 2*pi
 
         m_turnConfig.closedLoop.maxMotion
-            .positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal); 
+            .positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal); //sets motion profile to maxMotion
+
 
         //the lines below configure the SparkMaxConfig object for the climb motor
         m_climbConfig
-            .idleMode(IdleMode.kBrake)
-            .inverted(true);
+            .idleMode(IdleMode.kBrake) //sets climb motor to brake mode
+            .inverted(true); //inverts the climb motor
 
         m_climbConfig.closedLoop
-            .pid(RobotConstants.kClimbP, RobotConstants.kClimbI, RobotConstants.kClimbD);
+            .pid(RobotConstants.kClimbP, RobotConstants.kClimbI, RobotConstants.kClimbD); //configures climb motor PID
         
+
         //the lines below configure the SparkMaxConfig object for the elevator motor
         m_elevatorConfig
-            .idleMode(IdleMode.kBrake);
+            .idleMode(IdleMode.kBrake); //sets elevator motor to brake mode
         
         m_elevatorConfig.closedLoop
-            .pid(RobotConstants.kElevatorP, RobotConstants.kElevatorI, RobotConstants.kElevatorD);
+            .pid(RobotConstants.kElevatorP, RobotConstants.kElevatorI, RobotConstants.kElevatorD); //configures elevator motor PID
+
 
         //the lines below configure the SparkMaxConfig object for the shooter motor
         m_shooterConfig
-            .idleMode(IdleMode.kBrake)
-            .inverted(true);
+            .idleMode(IdleMode.kBrake) //sets shooter motor to brake mode
+            .inverted(true); //inverts the shooter motor
     
-        
         m_shooterConfig.closedLoop
-            .pid(RobotConstants.kShooterP, RobotConstants.kShooterI, RobotConstants.kShooterD);
+            .pid(RobotConstants.kShooterP, RobotConstants.kShooterI, RobotConstants.kShooterD); //configures shooter motor PID
     }
 }

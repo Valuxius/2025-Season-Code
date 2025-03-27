@@ -17,6 +17,7 @@ import frc.robot.MotorConfigs;
 import frc.robot.utils.TrapezoidalVelocityControl;
 
 public class SwerveModule {
+    //controls velocity setpoint to smooth out motion
     private final TrapezoidalVelocityControl m_driveProfile;
     
     //initializing the motors
@@ -34,6 +35,7 @@ public class SwerveModule {
     private double m_angleOffset; //default chassis offset aka the angle of the module from its calibrated position to being stright
     private SwerveModuleState m_desiredState = new SwerveModuleState(0.0, new Rotation2d()); //sets the swerve module's velocity to 0 and the angle to 0 when the code is initialized
 
+    //limits unit change (aka velocity)
     private SlewRateLimiter filter = new SlewRateLimiter(15);
 
     public SwerveModule(int p_driveID, int p_turnID, double p_angleOffset) {
@@ -113,7 +115,8 @@ public class SwerveModule {
         //sets the state of the module to the state we created
         m_drivePID.setReference(m_driveProfile.getSetpoint(correctedDesiredState.speedMetersPerSecond, m_driveEncoder.getVelocity()), ControlType.kVelocity);
         m_turnPID.setReference(filter.calculate(correctedDesiredState.angle.getRadians()), ControlType.kPosition);
-
+        
+        //sets desired state for next calculation
         m_desiredState = desiredState;
     }
 }

@@ -83,6 +83,9 @@ public class ElevatorSubsystem extends SubsystemBase {
     //makes a new PID with the trapezoidal constraints
     m_PID = new ProfiledPIDController(
       RobotConstants.kElevatorP, RobotConstants.kElevatorI, RobotConstants.kElevatorD, constraints, 0.02);
+
+    //sets tolerance for PID  
+    m_PID.setTolerance(0.25);
     
     //default states
     currentState = new TrapezoidProfile.State(0, 0);
@@ -188,15 +191,6 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   /**
-   * Gets the elevator encoder. 
-   * 
-   * @return Elevator encoder
-   */
-  public RelativeEncoder getEncoder() {
-    return m_Encoder;
-  }
-
-  /**
    * Calculates the necessary feedforward to control the elevator.
    * 
    * @param state Current state of the elevator (position, velocity)
@@ -211,25 +205,34 @@ public class ElevatorSubsystem extends SubsystemBase {
   // This method will be called once per scheduler run
   @Override
   public void periodic() { 
+    //puts elevator encoder position on Shuffleboard
+    SmartDashboard.putNumber("Elevator Encoder", m_Encoder.getPosition());
+
+    //sets the goal for the trapezoidal profile
+    goalState = new TrapezoidProfile.State(height, 0);
+
     //calculates the next "step" in the trapezoidal motion
     currentState = profile.calculate(0.02, currentState, goalState);
 
-    //puts encoder position on SmartDashboard for troubleshooting
-    SmartDashboard.putNumber("Elevator Encoder", m_Encoder.getPosition());
-    
-    goalState = new TrapezoidProfile.State(height, 0);
-    m_PID.setTolerance(0.25);
-    double output = m_PID.calculate(m_Encoder.getPosition(), currentState.position);
+    //calculates output using a feedforward controller
     double ff = calculateFF(currentState);
+
+    //calculates error using feedback, aka correcting the feedforward
+    double output = m_PID.calculate(m_Encoder.getPosition(), currentState.position);
+
+    //brings the elevator down slowly past this position instead of stopping fully so that the elevator goes to the bottom
     if (m_Encoder.getPosition() < 0.5 && height == 0) {
       m_lMotor.set(-0.05);
     }
+    //"grabs" the elevator as soon as it passes a certain point so that the elevator can be brought down and encoders can be reset
     else if (m_Encoder.getPosition() < 1 && height == 0) {
       m_lMotor.set((-0.75/9) * m_Encoder.getPosition());
     }
+    //slows down the elevator as long as it is going down and is close to the bottom
     else if (m_Encoder.getPosition() < 9 && currentState.velocity < 0 && height == 0) {
       m_lMotor.set(-0.75 * m_Encoder.getPosition()/9);
     } 
+    //moves towards the setpoint manually without PID control or feedforward control when the elevator is close to the setpoint
     else if (Math.abs(m_Encoder.getPosition() - height) < 3) {
       m_lMotor.set(MathUtil.applyDeadband(
         (height > m_Encoder.getPosition()) ?
@@ -239,8 +242,10 @@ public class ElevatorSubsystem extends SubsystemBase {
         )
       );
     }
+    //moves towards the setpoint with PID control and feedforward
     else m_lMotor.set(MathUtil.clamp(output+ff, -0.75, 0.75));
 
+    //detects when the elevator is at the bottom and resets the encoders
     if (height == 0 && m_Encoder.getPosition() < 1 && Math.abs(m_Encoder.getVelocity()) <= 0.005) {
       resetEncoder();
     }

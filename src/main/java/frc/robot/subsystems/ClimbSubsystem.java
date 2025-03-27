@@ -37,8 +37,10 @@ public class ClimbSubsystem extends SubsystemBase {
     //creating the PID controllers (disabled for now)
     m_climbPID = m_climbMotor.getClosedLoopController();
 
+    //resets the encoder
     m_climbEncoder.setPosition(0);
 
+    //configures the motor with predetermined settings in MotorConfigs
     m_climbMotor.configure(MotorConfigs.m_climbConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
@@ -58,9 +60,13 @@ public class ClimbSubsystem extends SubsystemBase {
    */
   public void rotate(double speed) {
     double newSpeed = speed;
+    
+    //stops the climb at encoder position 0
     if (m_climbEncoder.getPosition() <= 0 && speed < 0) {
       newSpeed = 0;
     }
+
+    //stops the climb at encoder position 180
     else if (m_climbEncoder.getPosition() > 180 && speed > 0) {
       newSpeed = 0;
     }
@@ -85,10 +91,13 @@ public class ClimbSubsystem extends SubsystemBase {
     return m_climbEncoder;
   }
 
+  // This method will be called once per scheduler run
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
+    //sets PID reference so that climb stays up when pulling the climb back
     m_climbPID.setReference(m_climbEncoder.getPosition(), ControlType.kPosition);
+
+    //posts the climb encoder position to Shuffleboard
     SmartDashboard.putNumber("ClimbEncoder", m_climbEncoder.getPosition());
   }
 }

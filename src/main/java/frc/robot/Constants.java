@@ -53,7 +53,7 @@ public final class Constants {
     public static final double kClimbI = 0.003;
     public static final double kClimbD = 0;
 
-    //gains for elevator motor PID (defaults)
+    //gains for elevator motor PID (defaults) and SGV (static friction, gravity, velocity)
     public static final double kElevatorP = 0;
     public static final double kElevatorI = 0;
     public static final double kElevatorD = 0;
@@ -61,7 +61,7 @@ public final class Constants {
     public static final double kElevatorG = 0.025;
     public static final double kElevatorV = 1.0 / 15.0;
 
-    //gains for shooter motor PID (defaults)
+    //gains for shooter motor PID (defaults) and SGV (static friction, gravity, velocity)
     public static final double kShooterP = 0.02;
     public static final double kShooterI = 0.004;
     public static final double kShooterD = 0;
@@ -75,6 +75,7 @@ public final class Constants {
     public static final int kBackLeftDriveMotorPort = 6;
     public static final int kBackRightDriveMotorPort = 8;
 
+    //turn motor ports
     public static final int kFrontLeftTurnMotorPort = 3;
     public static final int kFrontRightTurnMotorPort = 1;
     public static final int kBackLeftTurnMotorPort = 5;
@@ -165,9 +166,11 @@ public final class Constants {
     //robot clock cycle 
     public static final double kDriverPeriod = TimedRobot.kDefaultPeriod;
 
-    public static final double kTurnEncoderPositionFactor = 2 * Math.PI; //radians 
-    public static final double kTurnEncoderVelocityFactor = (2 * Math.PI) / 60.0; // radians per second
+    //conversion factors
+    public static final double kTurnEncoderPositionFactor = 2 * Math.PI; //rotations -> radians 
+    public static final double kTurnEncoderVelocityFactor = (2 * Math.PI) / 60.0; //rotations per minute -> radians per second
 
+    //min and max turn motor inputs
     public static final double kTurnEncoderPositionPIDMinInput = 0; //min input for turn encoder
     public static final double kTurnEncoderPositionPIDMaxInput = 2 * Math.PI; //max input for turn encoder
 

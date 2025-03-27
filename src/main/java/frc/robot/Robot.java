@@ -16,7 +16,7 @@ public class Robot extends TimedRobot {
 
   public Robot() {
     m_robotContainer = new RobotContainer(); //creates the robot container
-    CameraServer.startAutomaticCapture();
+    CameraServer.startAutomaticCapture(); //starts camera capture
   }
 
   //runs periodically while the robot is active

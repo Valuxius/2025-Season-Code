@@ -24,4 +24,15 @@ public class AnalogTrigger extends Trigger{
         super(() -> controller.getRawAxis(axis) >= threshold);
         requireNonNullParam(controller, "controller", "AnalogTrigger");
     }
+
+    /**
+     * Creates an AnalogTrigger object to trigger commands.
+     * 
+     * @param controller Controller to use
+     * @param axis Axis to watch
+     */
+    public AnalogTrigger(GenericHID controller, int axis) {
+        super(() -> controller.getRawAxis(axis) >= 0.2);
+        requireNonNullParam(controller, "controller", "AnalogTrigger");
+    }
 }
