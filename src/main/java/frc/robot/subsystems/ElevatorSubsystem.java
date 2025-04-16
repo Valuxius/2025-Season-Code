@@ -202,11 +202,16 @@ public class ElevatorSubsystem extends SubsystemBase {
            RobotConstants.kElevatorV * state.velocity;
   }
 
+  public boolean isMoving() {
+    return Math.abs(m_Encoder.getVelocity()) > 0.3 && Math.abs(m_Encoder.getPosition() - height) > 0.75;
+  }
+
   // This method will be called once per scheduler run
   @Override
   public void periodic() { 
     //puts elevator encoder position on Shuffleboard
     SmartDashboard.putNumber("Elevator Encoder", m_Encoder.getPosition());
+    SmartDashboard.putBoolean("isMoving", isMoving());
 
     //sets the goal for the trapezoidal profile
     goalState = new TrapezoidProfile.State(height, 0);

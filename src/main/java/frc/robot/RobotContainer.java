@@ -8,10 +8,12 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -21,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.subsystems.ClimbSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
+import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.swerve.DriveSubsystem;
 import frc.robot.utils.AdjustedGyro;
@@ -38,6 +41,7 @@ public class RobotContainer {
     RobotConstants.kRotationMotorPort);
   private final ClimbSubsystem m_climb = new ClimbSubsystem(
     RobotConstants.kClimbMotorPort);
+  private final LEDSubsystem m_led = new LEDSubsystem();
 
   //creating the controllers, allows our controllers to be detected by our programming
   Joystick m_driverController = new Joystick(RobotConstants.kDriverControllerPort); //kDriverControllerPort is the port on which the driver controller is connected to
@@ -201,9 +205,15 @@ public class RobotContainer {
              Math.abs(m_driverController.getRawAxis(RobotConstants.kRightXAxisPort)) <= 0.05)
     );
 
+    Trigger lightChange = new Trigger(() -> m_elevator.isMoving() || m_shooter.isMoving());
+
     //stops gyro when robot is stationary, starts gyro again when robot is moving
     gyroStop.onTrue(new InstantCommand(() -> AdjustedGyro.setGyroStop(true)));
     gyroStop.whileFalse(new RunCommand(() -> AdjustedGyro.setGyroStop(false)));
+
+    lightChange.whileTrue(new RunCommand(() -> m_led.setPattern(LEDPattern.solid(Color.kGreen)), m_led));
+    lightChange.onTrue(new InstantCommand(() -> m_led.setMoving(true)));
+    lightChange.onFalse(new InstantCommand(() -> m_led.setMoving(false)));
 
     //binding buttons to controls  
     driverBButton.onTrue(m_drive.resetGyro()); //reset gyro button
@@ -288,7 +298,7 @@ public class RobotContainer {
     manipulatorMinusButton.onFalse(new InstantCommand(() -> m_shooter.rotate(0)));
 
     //manual climb control
-    driverRightShoulder.whileTrue(new RunCommand(() -> m_climb.rotate(0.3), m_climb)); //tilt up
+    driverRightShoulder.whileTrue(new RunCommand(() -> m_climb.rotate(0.48), m_climb)); //tilt up
     driverRightShoulder.onFalse(new InstantCommand(() -> m_climb.rotate(0)));
     driverLeftShoulder.whileTrue(new RunCommand(() -> m_climb.rotate(-0.3), m_climb)); //tilt down
     driverLeftShoulder.onFalse(new InstantCommand(() -> m_climb.rotate(0)));
@@ -322,7 +332,6 @@ public class RobotContainer {
     manipulatorYButton.onTrue(new InstantCommand(() -> {m_elevator.setPreset(1); m_shooter.setPreset(4);})); //L1
     manipulatorBButton.onTrue(new InstantCommand(() -> {m_elevator.setPreset(2); m_shooter.setPreset(5);})); //L2
     manipulatorAButton.onTrue(new InstantCommand(() -> {m_elevator.setPreset(3); m_shooter.setPreset(6);})); //L3
-
   }
 
   /**

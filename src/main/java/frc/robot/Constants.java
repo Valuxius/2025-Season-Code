@@ -66,8 +66,8 @@ public final class Constants {
     public static final double kShooterI = 0.004;
     public static final double kShooterD = 0;
     public static final double kShooterS = 0;
-    public static final double kShooterG = 0.029;
-    public static final double kShooterV = 0.02;
+    public static final double kShooterG = 0.029 / 1.8;
+    public static final double kShooterV = 0.02 * 1.8;
 
     //drive motor ports 
     public static final int kFrontLeftDriveMotorPort = 4;
@@ -175,7 +175,7 @@ public final class Constants {
     public static final double kTurnEncoderPositionPIDMaxInput = 2 * Math.PI; //max input for turn encoder
 
     //current limits for swerve motors
-    public static final int kDriveCurrentLimit = 40;
+    public static final int kDriveCurrentLimit = 60;
     public static final int kTurnCurrentLimit = 20;
 
   }

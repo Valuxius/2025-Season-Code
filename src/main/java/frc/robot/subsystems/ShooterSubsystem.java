@@ -38,14 +38,15 @@ public class ShooterSubsystem extends SubsystemBase {
   private double preset = 0;
 
   //angle variables (0 is bottom)
-  private double netPreset = 9.5;
-  private double algaePreset = 7;
-  private double floorPreset = 8;
-  private double l1coralPreset = 4;
-  private double l2coralPreset = 2;
-  private double l3coralPreset = 1;
-  private double humanPlayerPreset = 2;
-  private double processorPreset = 2;
+  private double netPreset = 9.5 * 1.8;
+  private double algaePreset = 10;
+  private double floorPreset = 8 * 1.8;
+  private double l1coralPreset = 4 * 1.8;
+  private double l2coralPreset = 2 * 1.8;
+  private double l3coralPreset = 1 * 1.8;
+  private double humanPlayerPreset = 2 * 1.8;
+  private double processorPreset = 5;
+  private double startPreset = -18;
 
   //rotation variable
   private double rotation = 0;
@@ -115,13 +116,13 @@ public class ShooterSubsystem extends SubsystemBase {
     double newSpeed = speed;
 
     //slows down rotation when moving down to the bottom
-    if (m_rotationEncoder.getPosition() < 4 && speed < 0) {
-      newSpeed = speed * (m_rotationEncoder.getPosition()/4);
-    } 
+    // if (m_rotationEncoder.getPosition() < 7.2 && speed < 0) {
+    //   newSpeed = speed * (m_rotationEncoder.getPosition()/7.2);
+    // } 
     
     //slows down rotation when moving up
-    else if (m_rotationEncoder.getPosition() > 7 && speed > 0) {
-      newSpeed = speed * ((11 - m_rotationEncoder.getPosition())/4);
+    if (m_rotationEncoder.getPosition() > 15 && speed > 0) {
+      newSpeed = speed * ((18 - m_rotationEncoder.getPosition())/3);
     }
     
     m_rotationMotor.set(newSpeed);
@@ -144,6 +145,7 @@ public class ShooterSubsystem extends SubsystemBase {
     else if (preset == 6) rotation = l3coralPreset;
     else if (preset == 7) rotation = humanPlayerPreset;
     else if (preset == 8) rotation = processorPreset;
+    else if (preset == 9) rotation = startPreset;
   }
 
   /**
@@ -174,6 +176,10 @@ public class ShooterSubsystem extends SubsystemBase {
            RobotConstants.kShooterV * state.velocity;
   }
 
+  public boolean isMoving() {
+    return Math.abs(m_rotationEncoder.getVelocity()) > 0.15 && Math.abs(m_rotationEncoder.getPosition() - rotation) > 0.5;
+  }
+
   // This method will be called once per scheduler run
   @Override
   public void periodic() {
@@ -190,16 +196,26 @@ public class ShooterSubsystem extends SubsystemBase {
     double output = m_rotationPID.calculate(m_rotationEncoder.getPosition(), currentState.position);
 
     //moves the shooter to max height when it hits within 0.5 of the max rotation
-    if (m_rotationEncoder.getPosition() > 10.5) {
-      m_rotationMotor.set(ff * ((11 - m_rotationEncoder.getPosition())/0.5));
+    if (m_rotationEncoder.getPosition() > 16.5) {
+      m_rotationMotor.set(ff * ((17 - m_rotationEncoder.getPosition())/0.5));
+    }
+
+    //resets our encoders from starting config
+    else if (m_rotationEncoder.getPosition() > -18 && preset == 9) {
+      if (rotation == -18 && m_rotationEncoder.getPosition() < -15 && Math.abs(m_rotationEncoder.getVelocity()) < 0.005) {
+        m_rotationMotor.set(0);
+        resetEncoder();
+        preset = 0;
+      }
+      else m_rotationMotor.set(-0.05);//m_rotationMotor.set(-0.3 * (m_rotationEncoder.getPosition() + 12)/12);
     }
 
     //slows down output near the bottom of the shooter 
-    else if (Math.abs(m_rotationEncoder.getPosition() - rotation) < 1.5 && currentState.velocity != 0) {
+    else if (Math.abs(m_rotationEncoder.getPosition() - rotation) < 2.7 && currentState.velocity != 0) {
       m_rotationMotor.set(
         (rotation > m_rotationEncoder.getPosition()) ?
-        0.2 * ((rotation - m_rotationEncoder.getPosition())/1.5) + RobotConstants.kShooterG :
-        -0.2 * ((m_rotationEncoder.getPosition() - rotation)/1.5) + RobotConstants.kShooterG
+        0.36 * ((rotation - m_rotationEncoder.getPosition())/2.7) + RobotConstants.kShooterG :
+        -0.36 * ((m_rotationEncoder.getPosition() - rotation)/2.7) + RobotConstants.kShooterG
       );
     }
 
@@ -207,7 +223,7 @@ public class ShooterSubsystem extends SubsystemBase {
     else m_rotationMotor.set(ff+output);
 
     //detects when the shooter is at the bottom and zeroes the encoders
-    if (rotation == 0 && m_rotationEncoder.getPosition() < 0.5 && Math.abs(m_rotationEncoder.getVelocity()) < 0.005) {
+    if (rotation == 0 && m_rotationEncoder.getPosition() < 0.9 && Math.abs(m_rotationEncoder.getVelocity()) < 0.005) {
       resetEncoder();
     }
 

@@ -29,6 +29,7 @@ public final class MotorConfigs {
         m_driveConfig
             .idleMode(IdleMode.kCoast) //sets drive motor's idle mode into brake mode (locked in place)
             .smartCurrentLimit(RobotConstants.kDriveCurrentLimit); //limits the current that can be going through the drive motor
+        
 
         m_driveConfig.encoder //configures the drive encoders
             .positionConversionFactor(RobotConstants.kDriveEncoderPositionFactor) //sets a conversion factor for position of the encoder
